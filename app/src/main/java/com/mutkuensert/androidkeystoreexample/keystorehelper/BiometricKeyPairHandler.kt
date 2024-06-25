@@ -17,7 +17,7 @@ class BiometricKeyPairHandler(alias: String) {
         return keyStoreHelper.deleteKeyStoreEntry()
     }
 
-    fun signData(
+    fun authenticateAndSignData(
         data: String,
         activity: FragmentActivity,
         onAuthenticationSucceeded: (SignedData?) -> Unit

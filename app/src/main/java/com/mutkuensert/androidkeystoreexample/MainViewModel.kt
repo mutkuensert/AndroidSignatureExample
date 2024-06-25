@@ -63,7 +63,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signData(activity: FragmentActivity) {
-        biometricKeyPairHandler.signData(
+        biometricKeyPairHandler.authenticateAndSignData(
             uiModel.value.data,
             activity,
             onAuthenticationSucceeded = { signedData: SignedData? ->
