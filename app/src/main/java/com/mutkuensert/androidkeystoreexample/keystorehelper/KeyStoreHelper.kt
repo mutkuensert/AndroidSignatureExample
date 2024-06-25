@@ -6,6 +6,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.util.Log
+import java.security.InvalidAlgorithmParameterException
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
@@ -100,8 +101,16 @@ class KeyStoreHelper(
         }
 
         val parameterSpec: KeyGenParameterSpec = getKeyGenParameterSpec()
-        kpg.initialize(parameterSpec)
-        return kpg.generateKeyPair()
+
+        val keyPair = try {
+            kpg.initialize(parameterSpec)
+            kpg.generateKeyPair()
+        } catch (e: InvalidAlgorithmParameterException) {
+            Log.e(Tag, e.stackTraceToString())
+            null
+        }
+
+        return keyPair
     }
 
     private fun getKeyGenParameterSpec(): KeyGenParameterSpec {
@@ -134,7 +143,7 @@ class KeyStoreHelper(
         return try {
             val keyStore = getKeyStore()
             keyStore.deleteEntry(alias)
-            keyStore.containsAlias(alias)
+            !keyStore.containsAlias(alias)
         } catch (e: KeyStoreException) {
             Log.e(
                 Tag,

@@ -1,7 +1,6 @@
 package com.mutkuensert.androidkeystoreexample
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -15,14 +14,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import com.mutkuensert.androidkeystoreexample.ui.theme.AndroidKeyStoreExampleTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -37,10 +38,12 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                         uiModel = uiModel,
                         onClickCreateKeyPair = viewModel::createKeyPair,
-                        onClickDeleteEntry = {},
-                        onClickSignData = {},
-                        onDataValueChange = {},
-                        )
+                        onClickDeleteEntry = viewModel::deleteEntry,
+                        onClickSignData = { viewModel.signData(this) },
+                        onDataValueChange = viewModel::changeDataValue,
+                    )
+
+                    LaunchedEffect(Unit) { viewModel.init() }
                 }
             }
         }
@@ -55,9 +58,11 @@ private fun MainScreen(
     onClickDeleteEntry: () -> Unit,
     onClickSignData: () -> Unit,
     onDataValueChange: (value: String) -> Unit,
-
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(5.dp)) {
+    Column(
+        modifier = modifier.padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
         Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Button(onClick = onClickCreateKeyPair) {
                 Text(text = "Create key pair")
@@ -72,16 +77,16 @@ private fun MainScreen(
             }
         }
 
-        Text(text = "Alias")
-        Text(text = uiModel.signature, fontWeight = FontWeight.Bold)
+        Text(text = "Alias", fontWeight = FontWeight.Bold)
+        Text(text = uiModel.alias)
 
-        Text(text = "Public key")
-        Text(text = uiModel.signature, fontWeight = FontWeight.Bold)
+        Text(text = "Public key", fontWeight = FontWeight.Bold)
+        Text(text = uiModel.publicKey)
 
-        Text(text = "Data")
+        Text(text = "Data", fontWeight = FontWeight.Bold)
         OutlinedTextField(value = uiModel.data, onValueChange = onDataValueChange)
 
-        Text(text = "Signature")
-        Text(text = uiModel.signature, fontWeight = FontWeight.Bold)
+        Text(text = "Signature", fontWeight = FontWeight.Bold)
+        Text(text = uiModel.signature)
     }
 }
