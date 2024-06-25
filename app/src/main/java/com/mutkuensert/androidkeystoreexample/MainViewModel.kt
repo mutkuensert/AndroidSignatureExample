@@ -5,8 +5,9 @@ import android.content.Context
 import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.AndroidViewModel
-import com.mutkuensert.androidkeystoreexample.keystorehelper.BiometricAuthHelper
+import com.mutkuensert.androidkeystoreexample.keystorehelper.BiometricKeyPairHandler
 import com.mutkuensert.androidkeystoreexample.keystorehelper.KeyStoreHelper
+import com.mutkuensert.androidkeystoreexample.keystorehelper.SignedData
 import com.mutkuensert.androidkeystoreexample.keystorehelper.encodeBase64
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +21,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val uiModel = _uiModel.asStateFlow()
 
     private val alias = "alias"
-    private val keyStoreHelper = KeyStoreHelper(alias = alias, requireBiometricAuth = true)
+    private val biometricKeyPairHandler = BiometricKeyPairHandler(alias)
 
     private val preferences =
         application.applicationContext.getSharedPreferences(PrefsKeyPair, Context.MODE_PRIVATE)
@@ -32,48 +33,47 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun createKeyPair() {
-        val keyPair = keyStoreHelper.generateHardwareBackedKeyPair()
+        val keyPair = biometricKeyPairHandler.generateHardwareBackedKeyPair()
 
         if (keyPair != null) {
             preferences.edit {
-                putString(KeyPublicKey, keyStoreHelper.getPublicKeyBase64Encoded(keyPair))
+                putString(KeyPublicKey, KeyStoreHelper.getPublicKeyBase64Encoded(keyPair))
             }
         }
 
-        _uiModel.update {
-            if (keyPair != null) {
+        if (keyPair != null) {
+            _uiModel.update {
                 it.copy(
                     alias = alias,
-                    publicKey = keyStoreHelper.getPublicKeyBase64Encoded(keyPair) ?: ""
+                    publicKey = KeyStoreHelper.getPublicKeyBase64Encoded(keyPair)
                 )
-            } else {
-                it
             }
         }
     }
 
     fun deleteEntry() {
-        val isDeleted = keyStoreHelper.deleteKeyStoreEntry()
-        _uiModel.update {
-            if (isDeleted) {
-                preferences.edit { remove(KeyPublicKey) }
+        val isDeleted = biometricKeyPairHandler.deleteKeyPair()
 
-                it.copy(alias = "", publicKey = "")
-            } else {
-                it
+        if (isDeleted) {
+            _uiModel.update {
+                preferences.edit { remove(KeyPublicKey) }
+                MainUiModel.initial()
             }
         }
     }
 
     fun signData(activity: FragmentActivity) {
-        BiometricAuthHelper.authenticate(activity, onAuthenticationSucceeded = {
-            val signedData = keyStoreHelper.signData(uiModel.value.data) ?: return@authenticate
-            val signature: String = signedData.value.encodeBase64()
+        biometricKeyPairHandler.signData(
+            uiModel.value.data,
+            activity,
+            onAuthenticationSucceeded = { signedData: SignedData? ->
+                if (signedData != null) {
+                    _uiModel.update {
+                        it.copy(signature = signedData.value.encodeBase64())
+                    }
+                }
+            })
 
-            _uiModel.update {
-                it.copy(signature = signature)
-            }
-        })
     }
 
     fun changeDataValue(data: String) {
