@@ -6,9 +6,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -60,21 +61,21 @@ private fun MainScreen(
     onDataValueChange: (value: String) -> Unit,
 ) {
     Column(
-        modifier = modifier.padding(20.dp),
+        modifier = modifier
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            Button(onClick = onClickCreateKeyPair) {
-                Text(text = "Create key pair")
-            }
+        Button(onClick = onClickCreateKeyPair) {
+            Text(text = "Create key pair")
+        }
 
-            Button(onClick = onClickDeleteEntry) {
-                Text(text = "Delete entry")
-            }
+        Button(onClick = onClickDeleteEntry) {
+            Text(text = "Delete entry")
+        }
 
-            Button(onClick = onClickSignData) {
-                Text(text = "Sign data")
-            }
+        Button(onClick = onClickSignData) {
+            Text(text = "Sign data")
         }
 
         Text(text = "Alias", fontWeight = FontWeight.Bold)
