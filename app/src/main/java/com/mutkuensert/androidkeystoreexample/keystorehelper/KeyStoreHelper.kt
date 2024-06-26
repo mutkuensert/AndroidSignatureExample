@@ -1,5 +1,6 @@
 package com.mutkuensert.androidkeystoreexample.keystorehelper
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
@@ -60,6 +61,10 @@ class KeyStoreHelper(
      * @return Null if any error is occurred.
      */
     fun generateKeyPair(): KeyPair? {
+        // Apis lower than 30 with timeout greater than 0 adds device credential authentication
+        // type for the key which is no safer then biometric auth. That's why we return null here
+        if (requireBiometricAuth && Build.VERSION.SDK_INT < 30) return null
+
         val kpg: KeyPairGenerator = try {
             KeyPairGenerator.getInstance(
                 keyAlgorithm,
@@ -106,14 +111,11 @@ class KeyStoreHelper(
     }
 
 
+    @SuppressLint("NewApi")
     private fun KeyGenParameterSpec.Builder.setBiometricAuthRequired() {
         setUserAuthenticationRequired(true)
-
-        if (Build.VERSION.SDK_INT >= 30) {
-            setUserAuthenticationParameters(1, KeyProperties.AUTH_BIOMETRIC_STRONG)
-        } else {
-            setUserAuthenticationValidityDurationSeconds(1)
-        }
+        setUserAuthenticationParameters(1, KeyProperties.AUTH_BIOMETRIC_STRONG)
+        //if (Build.VERSION.SDK_INT < 30) setUserAuthenticationValidityDurationSeconds(1)
     }
 
     fun deleteKeyStoreEntry(): Boolean {
