@@ -70,11 +70,11 @@ class KeyStoreHelper(
                 keyAlgorithm,
                 keyPairProvider
             )
-        } catch (e: NoSuchAlgorithmException) {
-            Log.e(Tag, e.stackTraceToString())
+        } catch (exception: NoSuchAlgorithmException) {
+            Log.e(Tag, exception.stackTraceToString())
             return null
-        } catch (e: NullPointerException) {
-            Log.e(Tag, e.stackTraceToString())
+        } catch (exception: NullPointerException) {
+            Log.e(Tag, exception.stackTraceToString())
             return null
         }
 
@@ -83,8 +83,8 @@ class KeyStoreHelper(
         val keyPair = try {
             kpg.initialize(parameterSpec)
             kpg.generateKeyPair()
-        } catch (e: InvalidAlgorithmParameterException) {
-            Log.e(Tag, e.stackTraceToString())
+        } catch (exception: InvalidAlgorithmParameterException) {
+            Log.e(Tag, exception.stackTraceToString())
             null
         }
 
@@ -118,16 +118,25 @@ class KeyStoreHelper(
         //if (Build.VERSION.SDK_INT < 30) setUserAuthenticationValidityDurationSeconds(1)
     }
 
+    fun exists(): Boolean? {
+        return try {
+            getKeyStore().containsAlias(alias)
+        } catch (exception: KeyStoreException) {
+            Log.e(Tag, "::${::exists.name}: " + exception.stackTraceToString())
+            false
+        }
+    }
+
     fun deleteKeyStoreEntry(): Boolean {
         return try {
             val keyStore = getKeyStore()
             keyStore.deleteEntry(alias)
             !keyStore.containsAlias(alias)
-        } catch (e: KeyStoreException) {
+        } catch (exception: KeyStoreException) {
             Log.e(
                 Tag,
                 "::${::deleteKeyStoreEntry.name}: KeyStore entry with alias: $alias couldn't be deleted."
-                        + "\n" + e.stackTraceToString()
+                        + "\n" + exception.stackTraceToString()
             )
             false
         }
@@ -152,8 +161,8 @@ class KeyStoreHelper(
                 update(data.decodeBase64())
                 sign()
             }
-        } catch (e: SignatureException) {
-            Log.e(Tag, e.stackTraceToString())
+        } catch (exception: SignatureException) {
+            Log.e(Tag, exception.stackTraceToString())
             return null
         }
 
@@ -167,8 +176,8 @@ class KeyStoreHelper(
 
         val entry = try {
             ks.getEntry(alias, null)
-        } catch (e: Exception) {
-            Log.e(Tag, e.stackTraceToString())
+        } catch (exception: Exception) {
+            Log.e(Tag, exception.stackTraceToString())
             null
         }
 
@@ -214,8 +223,8 @@ class KeyStoreHelper(
         try {
             keyInfo = factory.getKeySpec(keyPair.private, KeyInfo::class.java)
             isHardwareBacked = keyInfo.isHardwareBacked()
-        } catch (e: InvalidKeySpecException) {
-            Log.e(Tag, e.stackTraceToString())
+        } catch (exception: InvalidKeySpecException) {
+            Log.e(Tag, exception.stackTraceToString())
         }
 
         return isHardwareBacked
