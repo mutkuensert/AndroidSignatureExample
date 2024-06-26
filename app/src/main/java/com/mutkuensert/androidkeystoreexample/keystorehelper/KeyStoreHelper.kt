@@ -61,9 +61,14 @@ class KeyStoreHelper(
      * @return Null if any error is occurred.
      */
     fun generateKeyPair(): KeyPair? {
-        // Apis lower than 30 with timeout greater than 0 adds device credential authentication
-        // type for the key which is no safer then biometric auth. That's why we return null here
-        if (requireBiometricAuth && Build.VERSION.SDK_INT < 30) return null
+        if (requireBiometricAuth && Build.VERSION.SDK_INT < 30) {
+            Log.w(
+                Tag, "::${::generateKeyPair.name}: In api levels lower than 30, key pairs " +
+                        "with authentication timeout greater than 0 are set with both device credential and biometric authentication parameter " +
+                        "which is not as safe as biometric authentication."
+            )
+            return null
+        }
 
         val kpg: KeyPairGenerator = try {
             KeyPairGenerator.getInstance(
@@ -235,6 +240,7 @@ class KeyStoreHelper(
             securityLevel == KeyProperties.SECURITY_LEVEL_TRUSTED_ENVIRONMENT
                     || securityLevel == KeyProperties.SECURITY_LEVEL_STRONGBOX
         } else {
+            @Suppress("DEPRECATION")
             isInsideSecureHardware
         }
     }
