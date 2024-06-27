@@ -9,7 +9,7 @@ https://github.com/mutkuensert/AndroidKeyStoreExample/assets/97624869/551f58b1-a
  * This class supports generating hardware-backed key pairs, signing data, verifying signatures, and managing KeyStore entries.
  *
  * @param alias The alias of the key entry in the KeyStore.
- * @param requireBiometricAuth Indicates if biometric authentication is required for accessing the key.
+ * @param requireBiometricAuth Indicates if strong biometric authentication is required for accessing the key.
  * @param keyAlgorithm The algorithm to be used for key generation. Default is EC (Elliptic Curve).
  * @param signatureAlgorithm The algorithm to be used for signing data. Default is "SHA256withECDSA".
  * @param keyPairProvider The provider for the KeyStore. Default is "AndroidKeyStore".
