@@ -234,6 +234,8 @@ class KeyStoreHelper(
                 verify(signature.decodeBase64())
             }
 
+            Log.i(Tag, "Signature: $signature is valid: $valid")
+
             return valid
         }
 
@@ -257,7 +259,13 @@ class KeyStoreHelper(
 
             val keySpec = X509EncodedKeySpec(publicBytes)
             val keyFactory = KeyFactory.getInstance(KeyAlgorithm)
-            return keyFactory.generatePublic(keySpec)
+
+            return try {
+                keyFactory.generatePublic(keySpec)
+            } catch (exception: InvalidKeySpecException) {
+                Log.e(Tag, exception.stackTraceToString())
+                null
+            }
         }
     }
 }
