@@ -3,6 +3,12 @@ package com.mutkuensert.androidkeystoreexample.keystorehelper
 import androidx.fragment.app.FragmentActivity
 import java.security.KeyPair
 
+/**
+ * BiometricKeyPairHandler manages the creation, deletion, and use of hardware-backed key pairs
+ * with biometric authentication. This class utilizes KeyStoreHelper to interact with the Android KeyStore.
+ *
+ * @param alias The alias of the key entry in the KeyStore.
+ */
 class BiometricKeyPairHandler(alias: String) {
     private val keyStoreHelper = KeyStoreHelper(
         alias = alias,
@@ -29,6 +35,10 @@ class BiometricKeyPairHandler(alias: String) {
         return keyStoreHelper.verifyData(publicKey, data, signature)
     }
 
+    /**
+     * Authenticates the user via biometric authentication and signs the given data.
+     * Calls the provided callback function with the signed data upon successful authentication.
+     */
     fun authenticateAndSignData(
         data: String,
         activity: FragmentActivity,
