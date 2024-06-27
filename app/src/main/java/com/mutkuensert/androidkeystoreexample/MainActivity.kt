@@ -143,6 +143,6 @@ private fun MainScreen(
 
         Text(text = "Is verified", fontWeight = FontWeight.Bold)
 
-        SelectionContainer { Text(text = uiModel.isVerified, fontWeight = FontWeight.Bold) }
+        SelectionContainer { Text(text = uiModel.isVerified) }
     }
 }
