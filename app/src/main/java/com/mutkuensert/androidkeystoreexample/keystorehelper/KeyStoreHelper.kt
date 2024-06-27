@@ -226,8 +226,10 @@ class KeyStoreHelper(
         }
 
         fun verifyData(publicKey: String, data: String, signature: String): Boolean {
+            val pubKey: PublicKey = getPublicKeyFromString(publicKey) ?: return false
+
             val valid: Boolean = Signature.getInstance(SignatureAlgorithm).run {
-                initVerify(getPublicKeyFromString(publicKey))
+                initVerify(pubKey)
                 update(data.encodeToByteArray())
                 verify(signature.decodeBase64())
             }
@@ -245,8 +247,14 @@ class KeyStoreHelper(
             return valid
         }
 
-        fun getPublicKeyFromString(value: String): PublicKey {
-            val publicBytes = value.decodeBase64()
+        fun getPublicKeyFromString(value: String): PublicKey? {
+            val publicBytes = try {
+                value.decodeBase64()
+            } catch (exception: IllegalArgumentException) {
+                Log.e(Tag, exception.stackTraceToString())
+                return null
+            }
+
             val keySpec = X509EncodedKeySpec(publicBytes)
             val keyFactory = KeyFactory.getInstance(KeyAlgorithm)
             return keyFactory.generatePublic(keySpec)
