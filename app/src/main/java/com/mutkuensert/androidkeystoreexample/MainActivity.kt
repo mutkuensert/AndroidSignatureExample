@@ -91,15 +91,24 @@ private fun MainScreen(
         }
 
         Text(text = "Alias", fontWeight = FontWeight.Bold)
+
         Text(text = uiModel.alias)
 
         Text(text = "Public key", fontWeight = FontWeight.Bold)
+
         SelectionContainer { Text(text = uiModel.publicKey) }
 
         Text(text = "Data", fontWeight = FontWeight.Bold)
-        OutlinedTextField(value = uiModel.data, onValueChange = onDataValueChange)
+
+        OutlinedTextField(
+            value = uiModel.data,
+            onValueChange = onDataValueChange,
+            placeholder = {
+                Text(text = "Data", fontWeight = FontWeight.ExtraLight)
+            })
 
         Text(text = "Signature", fontWeight = FontWeight.Bold)
+
         SelectionContainer { Text(text = uiModel.signature) }
 
         HorizontalDivider()
@@ -111,23 +120,29 @@ private fun MainScreen(
         OutlinedTextField(value = uiModel.externalPublicKey,
             onValueChange = onExternalPublicKeyChange,
             placeholder = {
-                Text(text = "public key", fontWeight = FontWeight.ExtraLight)
+                Text(text = "Public key", fontWeight = FontWeight.ExtraLight)
             })
 
         Text(text = "Data to be verified", fontWeight = FontWeight.Bold)
-        OutlinedTextField(value = uiModel.dataToBeVerified,
+
+        OutlinedTextField(
+            value = uiModel.dataToBeVerified,
             onValueChange = onDataToBeVerifiedChange,
             placeholder = {
                 Text(text = "Data", fontWeight = FontWeight.ExtraLight)
             })
 
         Text(text = "Signature to be verified", fontWeight = FontWeight.Bold)
-        OutlinedTextField(value = uiModel.signatureToBeVerified,
+
+        OutlinedTextField(
+            value = uiModel.signatureToBeVerified,
             onValueChange = onSignatureToBeVerifiedChange,
             placeholder = {
                 Text(text = "Signature", fontWeight = FontWeight.ExtraLight)
             })
 
-        SelectionContainer { Text(text = "Is verified: ${uiModel.isVerified}") }
+        Text(text = "Is verified", fontWeight = FontWeight.Bold)
+
+        SelectionContainer { Text(text = uiModel.isVerified, fontWeight = FontWeight.Bold) }
     }
 }
