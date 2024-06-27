@@ -2,13 +2,12 @@ package com.mutkuensert.androidkeystoreexample
 
 import android.app.Application
 import android.content.Context
+import android.util.Base64
 import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.AndroidViewModel
 import com.mutkuensert.androidkeystoreexample.keystorehelper.BiometricKeyPairHandler
-import com.mutkuensert.androidkeystoreexample.keystorehelper.KeyStoreHelper
 import com.mutkuensert.androidkeystoreexample.keystorehelper.SignedData
-import com.mutkuensert.androidkeystoreexample.keystorehelper.encodeBase64
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -33,24 +32,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun createKeyPair(activity: FragmentActivity) {
-        val keyPair = biometricKeyPairHandler.generateHardwareBackedKeyPair(activity)
+        val keyPair = biometricKeyPairHandler.generateHardwareBackedKeyPair(activity) ?: return
+        val publicKey = biometricKeyPairHandler.getPublicKeyBase64Encoded(keyPair)
 
-        if (keyPair != null) {
-            preferences.edit {
-                putString(KeyPublicKey, KeyStoreHelper.getPublicKeyBase64Encoded(keyPair))
-            }
+        preferences.edit {
+            putString(KeyPublicKey, publicKey)
         }
 
-        if (keyPair != null) {
-            val publicKey = KeyStoreHelper.getPublicKeyBase64Encoded(keyPair)
-
-            _uiModel.update {
-                it.copy(
-                    alias = alias,
-                    publicKey = publicKey,
-                    externalPublicKey = publicKey
-                )
-            }
+        _uiModel.update {
+            it.copy(
+                alias = alias,
+                publicKey = publicKey,
+                externalPublicKey = publicKey
+            )
         }
     }
 
@@ -71,7 +65,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             activity,
             onAuthenticationSucceeded = { signedData: SignedData? ->
                 if (signedData != null) {
-                    val signature = signedData.value.encodeBase64()
+                    val signature = Base64.encodeToString(signedData.value, Base64.DEFAULT)
 
                     _uiModel.update {
                         it.copy(
@@ -111,10 +105,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun verify() {
         _uiModel.update {
             it.copy(
-                isVerified = KeyStoreHelper.verifyData(
+                isVerified = biometricKeyPairHandler.verifyData(
                     it.externalPublicKey,
                     it.dataToBeVerified,
-                    it.signature
+                    it.signatureToBeVerified
                 ).toString()
             )
         }

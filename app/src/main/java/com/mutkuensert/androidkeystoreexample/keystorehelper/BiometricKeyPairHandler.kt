@@ -21,6 +21,14 @@ class BiometricKeyPairHandler(alias: String) {
         return keyStoreHelper.deleteKeyStoreEntry()
     }
 
+    fun getPublicKeyBase64Encoded(keyPair: KeyPair): String {
+        return keyStoreHelper.getPublicKeyBase64Encoded(keyPair)
+    }
+
+    fun verifyData(publicKey: String, data: String, signature: String): Boolean {
+        return keyStoreHelper.verifyData(publicKey, data, signature)
+    }
+
     fun authenticateAndSignData(
         data: String,
         activity: FragmentActivity,
