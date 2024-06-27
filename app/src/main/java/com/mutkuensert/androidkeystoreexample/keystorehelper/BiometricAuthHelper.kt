@@ -17,34 +17,22 @@ object BiometricAuthHelper {
         val biometricManager = BiometricManager.from(activity)
         return when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
             BiometricManager.BIOMETRIC_SUCCESS -> {
-                Log.d(
-                    "$Tag::${BiometricAuthHelper::isStrongBiometricAuthAvailable.name}",
-                    "App can authenticate using biometrics."
-                )
+                Log.d(Tag, "App can authenticate using biometrics.")
                 true
             }
 
             BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
-                Log.e(
-                    "$Tag::${BiometricAuthHelper::isStrongBiometricAuthAvailable.name}",
-                    "No biometric features available on this device."
-                )
+                Log.e(Tag, "No biometric features available on this device.")
                 false
             }
 
             BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
-                Log.e(
-                    "$Tag::${BiometricAuthHelper::isStrongBiometricAuthAvailable.name}",
-                    "Biometric features are currently unavailable."
-                )
+                Log.e(Tag, "Biometric features are currently unavailable.")
                 false
             }
 
             BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
-                Log.e(
-                    "$Tag::${BiometricAuthHelper::isStrongBiometricAuthAvailable.name}",
-                    "Biometric features are not enrolled."
-                )
+                Log.e(Tag, "Biometric features are not enrolled.")
                 false
             }
 
@@ -101,7 +89,7 @@ object BiometricAuthHelper {
             })
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Biometric login for my app")
+            .setTitle("Biometric login for app")
             .setSubtitle("Log in using your biometric credential")
             .setNegativeButtonText("Cancel")
             .setAllowedAuthenticators(BIOMETRIC_STRONG)
