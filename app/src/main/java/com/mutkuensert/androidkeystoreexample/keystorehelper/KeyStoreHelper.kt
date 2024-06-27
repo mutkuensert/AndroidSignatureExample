@@ -22,15 +22,21 @@ import java.security.spec.X509EncodedKeySpec
 private const val Tag = "KeyStoreHelper"
 
 /**
- * @param alias Keystore alias of entry.
- * @param requireBiometricAuth True if biometric auth is wanted for the key.
+ * KeyStoreHelper provides utility methods to generate and manage key pairs in the Android KeyStore.
+ * This class supports generating hardware-backed key pairs, signing data, verifying signatures, and managing KeyStore entries.
+ *
+ * @param alias The alias of the key entry in the KeyStore.
+ * @param requireBiometricAuth Indicates if biometric authentication is required for accessing the key.
+ * @param keyAlgorithm The algorithm to be used for key generation. Default is EC (Elliptic Curve).
+ * @param signatureAlgorithm The algorithm to be used for signing data. Default is "SHA256withECDSA".
+ * @param keyPairProvider The provider for the KeyStore. Default is "AndroidKeyStore".
  */
 class KeyStoreHelper(
     val alias: String,
     val requireBiometricAuth: Boolean = false,
     val keyAlgorithm: String = KeyProperties.KEY_ALGORITHM_EC,
-    val keyPairProvider: String = "AndroidKeyStore",
     val signatureAlgorithm: String = "SHA256withECDSA",
+    val keyPairProvider: String = "AndroidKeyStore",
 ) {
     /**
      * Generates key pair and if the pair is inside secure hardware, returns the pair
@@ -54,8 +60,8 @@ class KeyStoreHelper(
     }
 
     /**
-     * Generates key pair and writes private key into AndroidKeyStore.
-     * @return Null if any error is occurred.
+     * Generates key pair and writes the pair into AndroidKeyStore.
+     * @return Null if any error is occurred, otherwise the key pair.
      */
     fun generateKeyPair(): KeyPair? {
         if (requireBiometricAuth && Build.VERSION.SDK_INT < 30) {
@@ -112,7 +118,6 @@ class KeyStoreHelper(
         return spec.build()
     }
 
-
     @SuppressLint("NewApi")
     private fun KeyGenParameterSpec.Builder.setBiometricAuthRequired() {
         setUserAuthenticationRequired(true)
@@ -120,6 +125,9 @@ class KeyStoreHelper(
         //if (Build.VERSION.SDK_INT < 30) setUserAuthenticationValidityDurationSeconds(1)
     }
 
+    /**
+     *  Checks if a key entry with the specified alias exists in the KeyStore.
+     */
     fun exists(): Boolean? {
         return try {
             getKeyStore().containsAlias(alias)
@@ -129,6 +137,9 @@ class KeyStoreHelper(
         }
     }
 
+    /**
+     * Deletes the key entry with the specified alias from the KeyStore.
+     */
     fun deleteKeyStoreEntry(): Boolean {
         return try {
             val keyStore = getKeyStore()
@@ -145,8 +156,9 @@ class KeyStoreHelper(
     }
 
     /**
-     * If [requireBiometricAuth] is true authenticate user via biometric authentication
-     * before signing data.
+     * Signs the given data using the private key associated with the specified alias, returns null
+     * if an error occurs.
+     * If biometric authentication is required, it must be performed before signing the data.
      */
     fun signData(data: String): SignedData? {
         val entry = getPrivateKeyEntry() ?: return null
@@ -220,43 +232,48 @@ class KeyStoreHelper(
         }
     }
 
+    /**
+     * Encodes the public key of the given key pair to a Base64 string.
+     */
     fun getPublicKeyBase64Encoded(keyPair: KeyPair): String {
         return Base64.encodeToString(keyPair.public.encoded, Base64.NO_WRAP)
     }
 
+    /**
+     * Verifies the given signature using the provided public key and data.
+     */
     fun verifyData(publicKey: String, data: String, signature: String): Boolean {
         val pubKey: PublicKey = getPublicKeyFromString(publicKey) ?: return false
+        val valid: Boolean = verifyData(pubKey, data, signature)
+        return valid
+    }
 
+    /**
+     * Verifies the given signature using the provided public key and data.
+     */
+    fun verifyData(publicKey: PublicKey, data: String, signature: String): Boolean {
         val valid: Boolean = Signature.getInstance(signatureAlgorithm).run {
-            initVerify(pubKey)
+            initVerify(publicKey)
             update(data.toByteArray())
             verify(Base64.decode(signature, Base64.DEFAULT))
         }
-
         Log.i(Tag, "Signature: $signature is valid: $valid")
 
         return valid
     }
 
-    fun verifyData(publicKey: PublicKey, data: String, signedData: SignedData): Boolean {
-        val valid: Boolean = Signature.getInstance(signatureAlgorithm).run {
-            initVerify(publicKey)
-            update(data.toByteArray())
-            verify(signedData.signatureBytes)
-        }
-
-        return valid
-    }
-
-    fun getPublicKeyFromString(value: String): PublicKey? {
-        val publicBytes = try {
-            Base64.decode(value, Base64.NO_WRAP)
+    /**
+     * Converts a Base64 encoded public key string to a PublicKey object.
+     */
+    fun getPublicKeyFromString(publicKey: String): PublicKey? {
+        val publicKeyBytes = try {
+            Base64.decode(publicKey, Base64.NO_WRAP)
         } catch (exception: IllegalArgumentException) {
             Log.e(Tag, exception.stackTraceToString())
             return null
         }
 
-        val keySpec = X509EncodedKeySpec(publicBytes)
+        val keySpec = X509EncodedKeySpec(publicKeyBytes)
         val keyFactory = KeyFactory.getInstance(keyAlgorithm)
 
         return try {
