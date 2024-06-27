@@ -39,8 +39,8 @@ class KeyStoreHelper(
     val keyPairProvider: String = "AndroidKeyStore",
 ) {
     /**
-     * Generates key pair and if the pair is inside secure hardware, returns the pair
-     * otherwise returns null if the key pair isn't hardware backed or any error is occurred.
+     * Generates and returns key pair and if the pair is inside secure hardware or returns null and
+     * removes the entry if the key pair isn't hardware backed or any error is occurred.
      */
     fun generateHardwareBackedKeyPair(): KeyPair? {
         val keyPair = generateKeyPair() ?: return null
@@ -60,7 +60,7 @@ class KeyStoreHelper(
     }
 
     /**
-     * Generates key pair and writes the pair into AndroidKeyStore.
+     * Generates a key pair.
      * @return Null if any error is occurred, otherwise the key pair.
      */
     fun generateKeyPair(): KeyPair? {
