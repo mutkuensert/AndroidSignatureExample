@@ -117,6 +117,8 @@ private fun MainScreen(
             Text(text = "Verify with public key")
         }
 
+        Text(text = "Public key", fontWeight = FontWeight.Bold)
+
         OutlinedTextField(value = uiModel.externalPublicKey,
             onValueChange = onExternalPublicKeyChange,
             placeholder = {
