@@ -15,11 +15,13 @@ import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
 import java.security.PublicKey
 import java.security.Signature
-import java.security.SignatureException
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.X509EncodedKeySpec
 
 private const val Tag = "KeyStoreHelper"
+private const val KeyAlgorithm = KeyProperties.KEY_ALGORITHM_EC
+private const val KeyPairProvider = "AndroidKeyStore"
+private const val SignatureAlgorithm = "SHA256withECDSA"
 
 /**
  * @param alias Keystore alias of entry.
@@ -29,10 +31,6 @@ class KeyStoreHelper(
     val alias: String,
     val requireBiometricAuth: Boolean = false
 ) {
-    private val keyAlgorithm = KeyProperties.KEY_ALGORITHM_EC
-    private val keyPairProvider = "AndroidKeyStore"
-    private val signatureAlgorithm = "SHA256withECDSA"
-
     /**
      * Generates hardware backed key pair and writes private key into AndroidKeyStore.
      * @return Null if the private key isn't hardware backed or any error is occurred.
@@ -72,8 +70,8 @@ class KeyStoreHelper(
 
         val kpg: KeyPairGenerator = try {
             KeyPairGenerator.getInstance(
-                keyAlgorithm,
-                keyPairProvider
+                KeyAlgorithm,
+                KeyPairProvider
             )
         } catch (exception: NoSuchAlgorithmException) {
             Log.e(Tag, exception.stackTraceToString())
@@ -147,12 +145,6 @@ class KeyStoreHelper(
         }
     }
 
-    companion object {
-        fun getPublicKeyBase64Encoded(keyPair: KeyPair): String {
-            return keyPair.public.encoded.encodeBase64()
-        }
-    }
-
     /**
      * If [requireBiometricAuth] is true authenticate user via biometric authentication
      * before signing data.
@@ -161,12 +153,12 @@ class KeyStoreHelper(
         val entry = getPrivateKeyEntry() ?: return null
 
         val signature: ByteArray = try {
-            Signature.getInstance(signatureAlgorithm).run {
+            Signature.getInstance(SignatureAlgorithm).run {
                 initSign(entry.privateKey)
-                update(data.decodeBase64())
+                update(data.encodeToByteArray())
                 sign()
             }
-        } catch (exception: SignatureException) {
+        } catch (exception: Exception) {
             Log.e(Tag, exception.stackTraceToString())
             return null
         }
@@ -198,30 +190,13 @@ class KeyStoreHelper(
     }
 
     private fun getKeyStore(): KeyStore {
-        return KeyStore.getInstance(keyPairProvider).apply {
+        return KeyStore.getInstance(KeyPairProvider).apply {
             load(null)
         }
     }
 
-    fun verifyData(publicKey: PublicKey, data: String, signedData: SignedData): Boolean {
-        val valid: Boolean = Signature.getInstance(signatureAlgorithm).run {
-            initVerify(publicKey)
-            update(data.decodeBase64())
-            verify(signedData.value)
-        }
-
-        return valid
-    }
-
-    fun getPublicKeyFromString(value: String): PublicKey {
-        val publicBytes = value.decodeBase64()
-        val keySpec = X509EncodedKeySpec(publicBytes)
-        val keyFactory = KeyFactory.getInstance(keyAlgorithm)
-        return keyFactory.generatePublic(keySpec)
-    }
-
     private fun isInsideSecureHardware(keyPair: KeyPair): Boolean? {
-        val factory = KeyFactory.getInstance(keyAlgorithm, keyPairProvider)
+        val factory = KeyFactory.getInstance(KeyAlgorithm, KeyPairProvider)
         val keyInfo: KeyInfo
         var isHardwareBacked: Boolean? = null
 
@@ -242,6 +217,39 @@ class KeyStoreHelper(
         } else {
             @Suppress("DEPRECATION")
             isInsideSecureHardware
+        }
+    }
+
+    companion object {
+        fun getPublicKeyBase64Encoded(keyPair: KeyPair): String {
+            return keyPair.public.encoded.encodeBase64()
+        }
+
+        fun verifyData(publicKey: String, data: String, signature: String): Boolean {
+            val valid: Boolean = Signature.getInstance(SignatureAlgorithm).run {
+                initVerify(getPublicKeyFromString(publicKey))
+                update(data.encodeToByteArray())
+                verify(signature.decodeBase64())
+            }
+
+            return valid
+        }
+
+        fun verifyData(publicKey: PublicKey, data: String, signedData: SignedData): Boolean {
+            val valid: Boolean = Signature.getInstance(SignatureAlgorithm).run {
+                initVerify(publicKey)
+                update(data.encodeToByteArray())
+                verify(signedData.value)
+            }
+
+            return valid
+        }
+
+        fun getPublicKeyFromString(value: String): PublicKey {
+            val publicBytes = value.decodeBase64()
+            val keySpec = X509EncodedKeySpec(publicBytes)
+            val keyFactory = KeyFactory.getInstance(KeyAlgorithm)
+            return keyFactory.generatePublic(keySpec)
         }
     }
 }

@@ -32,8 +32,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun createKeyPair() {
-        val keyPair = biometricKeyPairHandler.generateHardwareBackedKeyPair()
+    fun createKeyPair(activity: FragmentActivity) {
+        val keyPair = biometricKeyPairHandler.generateHardwareBackedKeyPair(activity)
 
         if (keyPair != null) {
             preferences.edit {
@@ -42,10 +42,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         if (keyPair != null) {
+            val publicKey = KeyStoreHelper.getPublicKeyBase64Encoded(keyPair)
+
             _uiModel.update {
                 it.copy(
                     alias = alias,
-                    publicKey = KeyStoreHelper.getPublicKeyBase64Encoded(keyPair)
+                    publicKey = publicKey,
+                    externalPublicKey = publicKey
                 )
             }
         }
@@ -68,8 +71,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             activity,
             onAuthenticationSucceeded = { signedData: SignedData? ->
                 if (signedData != null) {
+                    val signature = signedData.value.encodeBase64()
+
                     _uiModel.update {
-                        it.copy(signature = signedData.value.encodeBase64())
+                        it.copy(
+                            signature = signature,
+                            signatureToBeVerified = signature
+                        )
                     }
                 }
             })
@@ -79,6 +87,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun changeDataValue(data: String) {
         _uiModel.update {
             it.copy(data = data)
+        }
+    }
+
+    fun changeExternalPublicKeyValue(value: String) {
+        _uiModel.update {
+            it.copy(externalPublicKey = value)
+        }
+    }
+
+    fun changeDataToBeVerified(value: String) {
+        _uiModel.update {
+            it.copy(dataToBeVerified = value)
+        }
+    }
+
+    fun changeSignatureToBeVerified(value: String) {
+        _uiModel.update {
+            it.copy(signatureToBeVerified = value)
+        }
+    }
+
+    fun verify() {
+        _uiModel.update {
+            it.copy(
+                isVerified = KeyStoreHelper.verifyData(
+                    it.externalPublicKey,
+                    it.dataToBeVerified,
+                    it.signature
+                ).toString()
+            )
         }
     }
 }

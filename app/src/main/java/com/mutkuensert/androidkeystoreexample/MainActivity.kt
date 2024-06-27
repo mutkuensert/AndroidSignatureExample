@@ -7,10 +7,13 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,10 +41,14 @@ class MainActivity : FragmentActivity() {
                     MainScreen(
                         modifier = Modifier.padding(innerPadding),
                         uiModel = uiModel,
-                        onClickCreateKeyPair = viewModel::createKeyPair,
+                        onClickCreateKeyPair = { viewModel.createKeyPair(this) },
                         onClickDeleteEntry = viewModel::deleteEntry,
                         onClickSignData = { viewModel.signData(this) },
                         onDataValueChange = viewModel::changeDataValue,
+                        onExternalPublicKeyChange = viewModel::changeExternalPublicKeyValue,
+                        onSignatureToBeVerifiedChange = viewModel::changeSignatureToBeVerified,
+                        onDataToBeVerifiedChange = viewModel::changeDataToBeVerified,
+                        onVerify = viewModel::verify
                     )
 
                     LaunchedEffect(Unit) { viewModel.init() }
@@ -59,11 +66,16 @@ private fun MainScreen(
     onClickDeleteEntry: () -> Unit,
     onClickSignData: () -> Unit,
     onDataValueChange: (value: String) -> Unit,
+    onExternalPublicKeyChange: (value: String) -> Unit,
+    onDataToBeVerifiedChange: (value: String) -> Unit,
+    onSignatureToBeVerifiedChange: (value: String) -> Unit,
+    onVerify: () -> Unit
 ) {
     Column(
         modifier = modifier
             .padding(20.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .imePadding(),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Button(onClick = onClickCreateKeyPair) {
@@ -82,12 +94,40 @@ private fun MainScreen(
         Text(text = uiModel.alias)
 
         Text(text = "Public key", fontWeight = FontWeight.Bold)
-        Text(text = uiModel.publicKey)
+        SelectionContainer { Text(text = uiModel.publicKey) }
 
         Text(text = "Data", fontWeight = FontWeight.Bold)
         OutlinedTextField(value = uiModel.data, onValueChange = onDataValueChange)
 
         Text(text = "Signature", fontWeight = FontWeight.Bold)
-        Text(text = uiModel.signature)
+        SelectionContainer { Text(text = uiModel.signature) }
+
+        HorizontalDivider()
+
+        Button(onClick = onVerify) {
+            Text(text = "Verify with public key")
+        }
+
+        OutlinedTextField(value = uiModel.externalPublicKey,
+            onValueChange = onExternalPublicKeyChange,
+            placeholder = {
+                Text(text = "public key", fontWeight = FontWeight.ExtraLight)
+            })
+
+        Text(text = "Data to be verified", fontWeight = FontWeight.Bold)
+        OutlinedTextField(value = uiModel.dataToBeVerified,
+            onValueChange = onDataToBeVerifiedChange,
+            placeholder = {
+                Text(text = "Data", fontWeight = FontWeight.ExtraLight)
+            })
+
+        Text(text = "Signature to be verified", fontWeight = FontWeight.Bold)
+        OutlinedTextField(value = uiModel.signatureToBeVerified,
+            onValueChange = onSignatureToBeVerifiedChange,
+            placeholder = {
+                Text(text = "Signature", fontWeight = FontWeight.ExtraLight)
+            })
+
+        SelectionContainer { Text(text = "Is verified: ${uiModel.isVerified}") }
     }
 }

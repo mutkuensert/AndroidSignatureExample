@@ -9,7 +9,11 @@ class BiometricKeyPairHandler(alias: String) {
         requireBiometricAuth = true
     )
 
-    fun generateHardwareBackedKeyPair(): KeyPair? {
+    fun generateHardwareBackedKeyPair(activity: FragmentActivity): KeyPair? {
+        if (!BiometricAuthHelper.isStrongBiometricAuthAvailable(activity)) {
+            return null
+        }
+
         return keyStoreHelper.generateHardwareBackedKeyPair()
     }
 
@@ -25,5 +29,9 @@ class BiometricKeyPairHandler(alias: String) {
         BiometricAuthHelper.authenticate(activity, onAuthenticationSucceeded = {
             onAuthenticationSucceeded(keyStoreHelper.signData(data))
         })
+    }
+
+    fun exists(): Boolean? {
+        return keyStoreHelper.exists()
     }
 }
