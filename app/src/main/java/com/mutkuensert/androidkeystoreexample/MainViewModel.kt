@@ -2,7 +2,6 @@ package com.mutkuensert.androidkeystoreexample
 
 import android.app.Application
 import android.content.Context
-import android.util.Base64
 import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.AndroidViewModel
@@ -65,12 +64,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             activity,
             onAuthenticationSucceeded = { signedData: SignedData? ->
                 if (signedData != null) {
-                    val signature = Base64.encodeToString(signedData.value, Base64.DEFAULT)
-
                     _uiModel.update {
                         it.copy(
-                            signature = signature,
-                            signatureToBeVerified = signature
+                            signature = signedData.signature,
+                            signatureToBeVerified = signedData.signature
                         )
                     }
                 }

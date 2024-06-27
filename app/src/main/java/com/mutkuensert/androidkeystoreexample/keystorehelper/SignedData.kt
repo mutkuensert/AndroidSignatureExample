@@ -1,3 +1,3 @@
 package com.mutkuensert.androidkeystoreexample.keystorehelper
 
-class SignedData(val value: ByteArray)
+class SignedData(val signatureBytes: ByteArray, val signature: String)

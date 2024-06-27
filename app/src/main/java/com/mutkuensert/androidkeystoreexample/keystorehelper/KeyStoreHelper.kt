@@ -151,7 +151,7 @@ class KeyStoreHelper(
     fun signData(data: String): SignedData? {
         val entry = getPrivateKeyEntry() ?: return null
 
-        val signature: ByteArray = try {
+        val signatureBytes: ByteArray = try {
             Signature.getInstance(signatureAlgorithm).run {
                 initSign(entry.privateKey)
                 update(data.encodeToByteArray())
@@ -162,12 +162,10 @@ class KeyStoreHelper(
             return null
         }
 
-        Log.i(
-            Tag,
-            "::${::signData.name}: Signature: ${Base64.encodeToString(signature, Base64.DEFAULT)}"
-        )
+        val signature: String = Base64.encodeToString(signatureBytes, Base64.DEFAULT)
+        Log.i(Tag, "::${::signData.name}: Signature: $signature")
 
-        return SignedData(signature)
+        return SignedData(signatureBytes, signature)
     }
 
     private fun getPrivateKeyEntry(): KeyStore.PrivateKeyEntry? {
@@ -244,7 +242,7 @@ class KeyStoreHelper(
         val valid: Boolean = Signature.getInstance(signatureAlgorithm).run {
             initVerify(publicKey)
             update(data.toByteArray())
-            verify(signedData.value)
+            verify(signedData.signatureBytes)
         }
 
         return valid
