@@ -32,8 +32,8 @@ class KeyStoreHelper(
     val requireBiometricAuth: Boolean = false
 ) {
     /**
-     * Generates hardware backed key pair and writes private key into AndroidKeyStore.
-     * @return Null if the private key isn't hardware backed or any error is occurred.
+     * Generates key pair and if the pair is inside secure hardware, returns the pair
+     * otherwise returns null if the key pair isn't hardware backed or any error is occurred.
      */
     fun generateHardwareBackedKeyPair(): KeyPair? {
         val keyPair = generateKeyPair() ?: return null
