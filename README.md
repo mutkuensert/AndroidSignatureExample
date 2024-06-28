@@ -107,6 +107,10 @@ class BiometricKeyPairHandler(alias: String) {
         requireBiometricAuth = true
     )
 
+    /**
+     * If strong biometric is available then returns
+     * [KeyStoreHelper.generateHardwareBackedKeyPair] otherwise returns null.
+     */
     fun generateHardwareBackedKeyPair(activity: FragmentActivity): KeyPair? {
         if (!BiometricAuthHelper.isStrongBiometricAuthAvailable(activity)) {
             return null
