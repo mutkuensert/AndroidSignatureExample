@@ -2,4 +2,7 @@
 <resources>
 
     <style name="Theme.AndroidKeyStoreExample" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+    Due to the compatibility issue when using biometric prompt
+    <style name="Theme.AndroidKeyStoreExample" parent="@style/Theme.AppCompat.Light" />-->
 </resources>
