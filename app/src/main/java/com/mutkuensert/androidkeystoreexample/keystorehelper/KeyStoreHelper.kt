@@ -1,6 +1,5 @@
 package com.mutkuensert.androidkeystoreexample.keystorehelper
 
-import android.annotation.SuppressLint
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
@@ -63,15 +62,6 @@ class KeyStoreHelper(
      * @return Null if any error is occurred, otherwise the key pair.
      */
     fun generateKeyPair(): KeyPair? {
-        if (requireBiometricAuth && Build.VERSION.SDK_INT < 30) {
-            Log.w(
-                Tag, "::${::generateKeyPair.name}: In api levels lower than 30, key pairs " +
-                        "with authentication timeout greater than 0 are set with both device credential and biometric authentication parameter " +
-                        "which is not as safe as biometric authentication."
-            )
-            return null
-        }
-
         val kpg: KeyPairGenerator = try {
             KeyPairGenerator.getInstance(
                 keyAlgorithm,
@@ -125,11 +115,19 @@ class KeyStoreHelper(
         return spec.build()
     }
 
-    @SuppressLint("NewApi")
+    /**
+     * Keep in mind that if sdk is lower than 30, device credential is also supported
+     * to use private key.
+     */
     private fun KeyGenParameterSpec.Builder.setBiometricAuthRequired() {
         setUserAuthenticationRequired(true)
-        setUserAuthenticationParameters(1, KeyProperties.AUTH_BIOMETRIC_STRONG)
-        //if (Build.VERSION.SDK_INT < 30) setUserAuthenticationValidityDurationSeconds(1)
+
+        if (Build.VERSION.SDK_INT >= 30) {
+            setUserAuthenticationParameters(1, KeyProperties.AUTH_BIOMETRIC_STRONG)
+        } else {
+            @Suppress("DEPRECATION")
+            setUserAuthenticationValidityDurationSeconds(1)
+        }
     }
 
     /**
@@ -265,7 +263,7 @@ class KeyStoreHelper(
             update(data.toByteArray())
             verify(Base64.decode(signature, Base64.DEFAULT))
         }
-        Log.i(Tag, "Signature: $signature is valid: $valid")
+        Log.i(Tag, "Signature $signature is valid: $valid")
 
         return valid
     }
