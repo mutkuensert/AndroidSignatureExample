@@ -31,6 +31,7 @@ private const val Tag = "KeyStoreHelper"
  * @param signatureAlgorithm The algorithm to be used for signing data. Default is "SHA256withECDSA".
  * @param keyPairProvider The provider for the KeyStore. Default is "AndroidKeyStore".
  */
+@OptIn(ExperimentalStdlibApi::class)
 class KeyStoreHelper(
     val alias: String,
     val requireBiometricAuth: Boolean = false,
@@ -44,10 +45,8 @@ class KeyStoreHelper(
      */
     fun generateHardwareBackedKeyPair(): KeyPair? {
         val keyPair = generateKeyPair() ?: return null
-        val publicKey: String = Base64.encodeToString(keyPair.public.encoded, Base64.NO_WRAP)
 
         return if (isInsideSecureHardware(keyPair) == true) {
-            Log.i(Tag, "::${::generateHardwareBackedKeyPair.name}: Public Key: $publicKey")
             keyPair
         } else {
             deleteKeyStoreEntry()
@@ -93,8 +92,16 @@ class KeyStoreHelper(
             kpg.generateKeyPair()
         } catch (exception: InvalidAlgorithmParameterException) {
             Log.e(Tag, exception.stackTraceToString())
-            null
+            return null
         }
+
+        val publicKeyBase64: String = Base64.encodeToString(keyPair.public.encoded, Base64.NO_WRAP)
+        Log.i(
+            Tag,
+            "::${::generateKeyPair.name}: " +
+                    "Public Key (Base64): $publicKeyBase64" +
+                    "\nPublic Key (Hex): ${keyPair.public.encoded.toHexString()}"
+        )
 
         return keyPair
     }
@@ -146,11 +153,7 @@ class KeyStoreHelper(
             keyStore.deleteEntry(alias)
             !keyStore.containsAlias(alias)
         } catch (exception: KeyStoreException) {
-            Log.e(
-                Tag,
-                "::${::deleteKeyStoreEntry.name}: KeyStore entry with alias: $alias couldn't be deleted."
-                        + "\n" + exception.stackTraceToString()
-            )
+            Log.e(Tag, "::${::deleteKeyStoreEntry.name}: " + exception.stackTraceToString())
             false
         }
     }
@@ -175,7 +178,12 @@ class KeyStoreHelper(
         }
 
         val signature: String = Base64.encodeToString(signatureBytes, Base64.DEFAULT)
-        Log.i(Tag, "::${::signData.name}: Signature: $signature")
+
+        Log.i(
+            Tag, "::${::signData.name}: " +
+                    "Signature (Base64): $signature" +
+                    "\nSignature (Hex): ${signatureBytes.toHexString()}"
+        )
 
         return SignedData(signatureBytes, signature)
     }
