@@ -1,4 +1,4 @@
-package com.mutkuensert.androidkeystoreexample.keystorehelper
+package com.mutkuensert.androidkeystoreexample.signaturehelper
 
 import android.app.Activity
 import android.util.Log

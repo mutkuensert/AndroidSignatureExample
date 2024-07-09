@@ -5,8 +5,8 @@ import android.content.Context
 import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.AndroidViewModel
-import com.mutkuensert.androidkeystoreexample.keystorehelper.BiometricKeyPairHandler
-import com.mutkuensert.androidkeystoreexample.keystorehelper.SignedData
+import com.mutkuensert.androidkeystoreexample.signaturehelper.BiometricKeyPairHandler
+import com.mutkuensert.androidkeystoreexample.signaturehelper.SignedData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

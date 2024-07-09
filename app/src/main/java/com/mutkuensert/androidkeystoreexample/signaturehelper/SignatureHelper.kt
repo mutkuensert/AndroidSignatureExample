@@ -1,4 +1,4 @@
-package com.mutkuensert.androidkeystoreexample.keystorehelper
+package com.mutkuensert.androidkeystoreexample.signaturehelper
 
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
@@ -18,10 +18,10 @@ import java.security.Signature
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.X509EncodedKeySpec
 
-private const val Tag = "KeyStoreHelper"
+private const val Tag = "SignatureHelper"
 
 /**
- * KeyStoreHelper provides utility methods to generate and manage key pairs in the Android KeyStore.
+ * [SignatureHelper] provides utility methods to generate and manage key pairs in the Android KeyStore.
  * This class supports generating hardware-backed key pairs, signing data, verifying signatures, and managing KeyStore entries.
  *
  * @param alias The alias of the key entry in the KeyStore.
@@ -31,7 +31,7 @@ private const val Tag = "KeyStoreHelper"
  * @param keyPairProvider The provider for the KeyStore. Default is "AndroidKeyStore".
  */
 @OptIn(ExperimentalStdlibApi::class)
-class KeyStoreHelper(
+class SignatureHelper(
     val alias: String,
     val requireBiometricAuth: Boolean = false,
     val keyAlgorithm: String = KeyProperties.KEY_ALGORITHM_EC,

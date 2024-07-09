@@ -2,10 +2,10 @@
 
 https://github.com/mutkuensert/AndroidKeyStoreExample/assets/97624869/551f58b1-a1da-4960-a878-28fc408d3c37
 
-## KeyStoreHelper.kt
+## SignatureHelper.kt
 ```kotlin
 /**
- * KeyStoreHelper provides utility methods to generate and manage key pairs in the Android KeyStore.
+ * [SignatureHelper] provides utility methods to generate and manage key pairs in the Android KeyStore.
  * This class supports generating hardware-backed key pairs, signing data, verifying signatures, and managing KeyStore entries.
  *
  * @param alias The alias of the key entry in the KeyStore.
@@ -14,7 +14,7 @@ https://github.com/mutkuensert/AndroidKeyStoreExample/assets/97624869/551f58b1-a
  * @param signatureAlgorithm The algorithm to be used for signing data. Default is "SHA256withECDSA".
  * @param keyPairProvider The provider for the KeyStore. Default is "AndroidKeyStore".
  */
-class KeyStoreHelper(
+class SignatureHelper(
     val alias: String,
     val requireBiometricAuth: Boolean = false,
     val keyAlgorithm: String = KeyProperties.KEY_ALGORITHM_EC,
@@ -97,38 +97,38 @@ class KeyStoreHelper(
 ```kotlin
 /**
  * BiometricKeyPairHandler manages the creation, deletion, and use of hardware-backed key pairs
- * with biometric authentication. This class utilizes KeyStoreHelper to interact with the Android KeyStore.
+ * with biometric authentication. This class utilizes [SignatureHelper] to interact with the Android KeyStore.
  *
  * @param alias The alias of the key entry in the KeyStore.
  */
 class BiometricKeyPairHandler(alias: String) {
-    private val keyStoreHelper = KeyStoreHelper(
+    private val signatureHelper = SignatureHelper(
         alias = alias,
         requireBiometricAuth = true
     )
 
     /**
      * If strong biometric is available then returns
-     * [KeyStoreHelper.generateHardwareBackedKeyPair] otherwise returns null.
+     * [SignatureHelper.generateHardwareBackedKeyPair] otherwise returns null.
      */
     fun generateHardwareBackedKeyPair(activity: FragmentActivity): KeyPair? {
         if (!BiometricAuthHelper.isStrongBiometricAuthAvailable(activity)) {
             return null
         }
 
-        return keyStoreHelper.generateHardwareBackedKeyPair()
+        return signatureHelper.generateHardwareBackedKeyPair()
     }
 
     fun deleteKeyPair(): Boolean {
-        return keyStoreHelper.deleteKeyStoreEntry()
+        return signatureHelper.deleteKeyStoreEntry()
     }
 
     fun getPublicKeyBase64Encoded(keyPair: KeyPair): String {
-        return keyStoreHelper.getPublicKeyBase64Encoded(keyPair)
+        return signatureHelper.getPublicKeyBase64Encoded(keyPair)
     }
 
     fun verifyData(publicKey: String, data: String, signature: String): Boolean {
-        return keyStoreHelper.verifyData(publicKey, data, signature)
+        return signatureHelper.verifyData(publicKey, data, signature)
     }
 
     /**
@@ -141,12 +141,12 @@ class BiometricKeyPairHandler(alias: String) {
         onAuthenticationSucceeded: (SignedData?) -> Unit
     ) {
         BiometricAuthHelper.authenticate(activity, onAuthenticationSucceeded = {
-            onAuthenticationSucceeded(keyStoreHelper.signData(data))
+            onAuthenticationSucceeded(signatureHelper.signData(data))
         })
     }
 
     fun exists(): Boolean? {
-        return keyStoreHelper.exists()
+        return signatureHelper.exists()
     }
 }
 ```

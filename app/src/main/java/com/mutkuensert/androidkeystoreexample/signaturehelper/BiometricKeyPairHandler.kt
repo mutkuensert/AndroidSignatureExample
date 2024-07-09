@@ -1,42 +1,42 @@
-package com.mutkuensert.androidkeystoreexample.keystorehelper
+package com.mutkuensert.androidkeystoreexample.signaturehelper
 
 import androidx.fragment.app.FragmentActivity
 import java.security.KeyPair
 
 /**
  * BiometricKeyPairHandler manages the creation, deletion, and use of hardware-backed key pairs
- * with biometric authentication. This class utilizes KeyStoreHelper to interact with the Android KeyStore.
+ * with biometric authentication. This class utilizes [SignatureHelper] to interact with the Android KeyStore.
  *
  * @param alias The alias of the key entry in the KeyStore.
  */
 class BiometricKeyPairHandler(alias: String) {
-    private val keyStoreHelper = KeyStoreHelper(
+    private val signatureHelper = SignatureHelper(
         alias = alias,
         requireBiometricAuth = true
     )
 
     /**
      * If strong biometric is available then returns
-     * [KeyStoreHelper.generateHardwareBackedKeyPair] otherwise returns null.
+     * [SignatureHelper.generateHardwareBackedKeyPair] otherwise returns null.
      */
     fun generateHardwareBackedKeyPair(activity: FragmentActivity): KeyPair? {
         if (!BiometricAuthHelper.isStrongBiometricAuthAvailable(activity)) {
             return null
         }
 
-        return keyStoreHelper.generateHardwareBackedKeyPair()
+        return signatureHelper.generateHardwareBackedKeyPair()
     }
 
     fun deleteKeyPair(): Boolean {
-        return keyStoreHelper.deleteKeyStoreEntry()
+        return signatureHelper.deleteKeyStoreEntry()
     }
 
     fun getPublicKeyBase64Encoded(keyPair: KeyPair): String {
-        return keyStoreHelper.getPublicKeyBase64Encoded(keyPair)
+        return signatureHelper.getPublicKeyBase64Encoded(keyPair)
     }
 
     fun verifyData(publicKey: String, data: String, signature: String): Boolean {
-        return keyStoreHelper.verifyData(publicKey, data, signature)
+        return signatureHelper.verifyData(publicKey, data, signature)
     }
 
     /**
@@ -49,11 +49,11 @@ class BiometricKeyPairHandler(alias: String) {
         onAuthenticationSucceeded: (SignedData?) -> Unit
     ) {
         BiometricAuthHelper.authenticate(activity, onAuthenticationSucceeded = {
-            onAuthenticationSucceeded(keyStoreHelper.signData(data))
+            onAuthenticationSucceeded(signatureHelper.signData(data))
         })
     }
 
     fun exists(): Boolean? {
-        return keyStoreHelper.exists()
+        return signatureHelper.exists()
     }
 }
