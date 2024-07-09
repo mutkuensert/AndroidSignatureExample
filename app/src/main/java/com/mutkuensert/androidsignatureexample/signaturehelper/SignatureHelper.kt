@@ -115,10 +115,6 @@ class SignatureHelper(
         return spec.build()
     }
 
-    /**
-     * Keep in mind that if sdk is lower than 30, device credential is also supported
-     * to use private key.
-     */
     private fun KeyGenParameterSpec.Builder.setBiometricAuthRequired() {
         setUserAuthenticationRequired(true)
 
@@ -175,7 +171,7 @@ class SignatureHelper(
             return null
         }
 
-        val signature: String = Base64.encodeToString(signatureBytes, Base64.DEFAULT)
+        val signature: String = Base64.encodeToString(signatureBytes, Base64.NO_WRAP)
 
         Log.i(
             Tag, "::${::signData.name}: " +
