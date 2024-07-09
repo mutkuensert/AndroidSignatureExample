@@ -1,4 +1,4 @@
-package com.mutkuensert.androidkeystoreexample.signaturehelper
+package com.mutkuensert.androidsignatureexample.signaturehelper
 
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec

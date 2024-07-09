@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AndroidKeyStoreExample"
+rootProject.name = "AndroidSignatureExample"
 include(":app")
  

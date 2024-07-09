@@ -1,4 +1,4 @@
-package com.mutkuensert.androidkeystoreexample
+package com.mutkuensert.androidsignatureexample
 
 data class MainUiModel(
     val alias: String,

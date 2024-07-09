@@ -1,4 +1,4 @@
-package com.mutkuensert.androidkeystoreexample.signaturehelper
+package com.mutkuensert.androidsignatureexample.signaturehelper
 
 import androidx.fragment.app.FragmentActivity
 import java.security.KeyPair

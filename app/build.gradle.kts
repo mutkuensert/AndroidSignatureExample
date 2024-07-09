@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.mutkuensert.androidkeystoreexample"
+    namespace = "com.mutkuensert.androidsignatureexample"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.mutkuensert.androidkeystoreexample"
+        applicationId = "com.mutkuensert.androidsignatureexample"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

@@ -1,4 +1,4 @@
-package com.mutkuensert.androidkeystoreexample
+package com.mutkuensert.androidsignatureexample
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
-import com.mutkuensert.androidkeystoreexample.ui.theme.AndroidKeyStoreExampleTheme
+import com.mutkuensert.androidsignatureexample.ui.theme.AndroidKeyStoreExampleTheme
 
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
