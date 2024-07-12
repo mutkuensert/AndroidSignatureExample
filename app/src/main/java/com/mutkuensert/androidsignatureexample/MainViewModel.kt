@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.AndroidViewModel
-import com.mutkuensert.androidsignatureexample.signaturehelper.BiometricKeyPairHandler
+import com.mutkuensert.androidsignatureexample.signaturehelper.BiometricSignatureHandler
 import com.mutkuensert.androidsignatureexample.signaturehelper.SignedData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +19,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val uiModel = _uiModel.asStateFlow()
 
     private val alias = "alias"
-    private val biometricKeyPairHandler = BiometricKeyPairHandler(alias)
+    private val biometricSignatureHandler = BiometricSignatureHandler(alias)
 
     private val preferences =
         application.applicationContext.getSharedPreferences(PrefsKeyPair, Context.MODE_PRIVATE)
@@ -31,8 +31,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun createKeyPair(activity: FragmentActivity) {
-        val keyPair = biometricKeyPairHandler.generateHardwareBackedKeyPair(activity) ?: return
-        val publicKey = biometricKeyPairHandler.getPublicKeyBase64Encoded(keyPair)
+        val keyPair = biometricSignatureHandler.generateHardwareBackedKeyPair(activity) ?: return
+        val publicKey = biometricSignatureHandler.getPublicKeyBase64Encoded(keyPair)
 
         preferences.edit {
             putString(KeyPublicKey, publicKey)
@@ -48,7 +48,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun deleteEntry() {
-        val isDeleted = biometricKeyPairHandler.deleteKeyPair()
+        val isDeleted = biometricSignatureHandler.deleteKeyPair()
 
         if (isDeleted) {
             _uiModel.update {
@@ -59,7 +59,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signData(activity: FragmentActivity) {
-        biometricKeyPairHandler.authenticateAndSignData(
+        biometricSignatureHandler.authenticateAndSignData(
             uiModel.value.data,
             activity,
             onAuthenticationSucceeded = { signedData: SignedData? ->
@@ -102,7 +102,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun verify() {
         _uiModel.update {
             it.copy(
-                isVerified = biometricKeyPairHandler.verifyData(
+                isVerified = biometricSignatureHandler.verifyData(
                     it.externalPublicKey,
                     it.dataToBeVerified,
                     it.signatureToBeVerified

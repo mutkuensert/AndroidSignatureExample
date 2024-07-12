@@ -4,23 +4,25 @@ import androidx.fragment.app.FragmentActivity
 import java.security.KeyPair
 
 /**
- * BiometricKeyPairHandler manages the creation, deletion, and use of hardware-backed key pairs
+ * [BiometricSignatureHandler] manages the creation, deletion, and use of hardware-backed key pairs
  * with biometric authentication. This class utilizes [SignatureHelper] to interact with the Android KeyStore.
  *
  * @param alias The alias of the key entry in the KeyStore.
  */
-class BiometricKeyPairHandler(alias: String) {
+class BiometricSignatureHandler(alias: String) {
     private val signatureHelper = SignatureHelper(
         alias = alias,
         requireBiometricAuth = true
     )
+    private val biometricAuthHelper = BiometricAuthHelper()
+    private var failedPromptCounter = 0
 
     /**
      * If strong biometric is available then returns
      * [SignatureHelper.generateHardwareBackedKeyPair] otherwise returns null.
      */
     fun generateHardwareBackedKeyPair(activity: FragmentActivity): KeyPair? {
-        if (!BiometricAuthHelper.isStrongBiometricAuthAvailable(activity)) {
+        if (!biometricAuthHelper.isStrongBiometricAuthAvailable(activity)) {
             return null
         }
 
@@ -48,9 +50,24 @@ class BiometricKeyPairHandler(alias: String) {
         activity: FragmentActivity,
         onAuthenticationSucceeded: (SignedData?) -> Unit
     ) {
-        BiometricAuthHelper.authenticate(activity, onAuthenticationSucceeded = {
-            onAuthenticationSucceeded(signatureHelper.signData(data))
-        })
+        failedPromptCounter = 0
+
+        biometricAuthHelper.authenticate(
+            activity,
+            onAuthenticationSucceeded = {
+                onAuthenticationSucceeded(signatureHelper.signData(data))
+            },
+            onAuthenticationFailed = ::closePromptWhenFailedToLimit
+        )
+    }
+
+    private fun closePromptWhenFailedToLimit() {
+        val limit = 4
+        failedPromptCounter++
+
+        if (failedPromptCounter == limit) {
+            biometricAuthHelper.closePrompt()
+        }
     }
 
     fun exists(): Boolean? {

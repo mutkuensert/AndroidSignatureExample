@@ -11,7 +11,8 @@ import androidx.fragment.app.FragmentActivity
 
 private const val Tag = "BiometricAuthHelper"
 
-object BiometricAuthHelper {
+class BiometricAuthHelper {
+    private lateinit var biometricPrompt: BiometricPrompt
 
     fun isStrongBiometricAuthAvailable(activity: Activity): Boolean {
         val biometricManager = BiometricManager.from(activity)
@@ -49,8 +50,34 @@ object BiometricAuthHelper {
         onAuthenticationSucceeded: (BiometricPrompt.AuthenticationResult) -> Unit = {},
         onAuthenticationFailed: () -> Unit = {}
     ) {
+        biometricPrompt = getBiometricPrompt(
+            fragmentActivity,
+            onAuthenticationError,
+            onAuthenticationSucceeded,
+            onAuthenticationFailed
+        )
+
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Biometric login for app")
+            .setSubtitle("Log in using your biometric credential")
+            .setNegativeButtonText("Cancel")
+            .setAllowedAuthenticators(BIOMETRIC_STRONG)
+            .build()
+
+        biometricPrompt.authenticate(promptInfo)
+    }
+
+    private fun getBiometricPrompt(
+        fragmentActivity: FragmentActivity,
+        onAuthenticationError: (
+            errorCode: Int,
+            errString: CharSequence
+        ) -> Unit = { _, _ -> },
+        onAuthenticationSucceeded: (BiometricPrompt.AuthenticationResult) -> Unit = {},
+        onAuthenticationFailed: () -> Unit = {}
+    ): BiometricPrompt {
         val executor = ContextCompat.getMainExecutor(fragmentActivity.applicationContext)
-        val biometricPrompt = BiometricPrompt(fragmentActivity, executor,
+        return BiometricPrompt(fragmentActivity, executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationError(
                     errorCode: Int,
@@ -87,14 +114,9 @@ object BiometricAuthHelper {
                     onAuthenticationFailed.invoke()
                 }
             })
+    }
 
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Biometric login for app")
-            .setSubtitle("Log in using your biometric credential")
-            .setNegativeButtonText("Cancel")
-            .setAllowedAuthenticators(BIOMETRIC_STRONG)
-            .build()
-
-        biometricPrompt.authenticate(promptInfo)
+    fun closePrompt() {
+        biometricPrompt.cancelAuthentication()
     }
 }
