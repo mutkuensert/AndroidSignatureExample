@@ -44,6 +44,7 @@ class MainActivity : FragmentActivity() {
                         onClickCreateKeyPair = { viewModel.createKeyPair(this) },
                         onClickDeleteEntry = viewModel::deleteEntry,
                         onClickSignData = { viewModel.signData(this) },
+                        onClickCreateTimestamp = viewModel::createTimestamp,
                         onDataValueChange = viewModel::changeDataValue,
                         onExternalPublicKeyChange = viewModel::changeExternalPublicKeyValue,
                         onSignatureToBeVerifiedChange = viewModel::changeSignatureToBeVerified,
@@ -65,6 +66,7 @@ private fun MainScreen(
     onClickCreateKeyPair: () -> Unit,
     onClickDeleteEntry: () -> Unit,
     onClickSignData: () -> Unit,
+    onClickCreateTimestamp: () -> Unit,
     onDataValueChange: (value: String) -> Unit,
     onExternalPublicKeyChange: (value: String) -> Unit,
     onDataToBeVerifiedChange: (value: String) -> Unit,
@@ -97,6 +99,12 @@ private fun MainScreen(
         Text(text = "Public key", fontWeight = FontWeight.Bold)
 
         SelectionContainer { Text(text = uiModel.publicKey) }
+
+        Button(onClick = onClickCreateTimestamp) {
+            Text(text = "Create timestamp")
+        }
+
+        SelectionContainer { Text(text = uiModel.timestamp) }
 
         Text(text = "Data", fontWeight = FontWeight.Bold)
 

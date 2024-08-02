@@ -22,11 +22,11 @@ class BiometricSignatureHandler(alias: String) {
      * [SignatureHelper.generateHardwareBackedKeyPair] otherwise returns null.
      */
     fun generateHardwareBackedKeyPair(activity: FragmentActivity): KeyPair? {
-        if (!biometricAuthHelper.isStrongBiometricAuthAvailable(activity)) {
+        /*if (!biometricAuthHelper.isStrongBiometricAuthAvailable(activity)) {
             return null
-        }
+        }*/
 
-        return signatureHelper.generateHardwareBackedKeyPair()
+        return signatureHelper.generateKeyPair()
     }
 
     fun deleteKeyPair(): Boolean {

@@ -2,6 +2,7 @@ package com.mutkuensert.androidsignatureexample
 
 data class MainUiModel(
     val alias: String,
+    val timestamp: String,
     val data: String,
     val signature: String,
     val publicKey: String,
@@ -14,6 +15,7 @@ data class MainUiModel(
         fun initial(): MainUiModel {
             return MainUiModel(
                 alias = "",
+                timestamp = "",
                 data = "",
                 signature = "",
                 publicKey = "",

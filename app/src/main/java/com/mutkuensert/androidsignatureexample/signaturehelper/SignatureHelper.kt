@@ -116,14 +116,14 @@ class SignatureHelper(
     }
 
     private fun KeyGenParameterSpec.Builder.setBiometricAuthRequired() {
-        setUserAuthenticationRequired(true)
+        /*setUserAuthenticationRequired(true)
 
         if (Build.VERSION.SDK_INT >= 30) {
             setUserAuthenticationParameters(1, KeyProperties.AUTH_BIOMETRIC_STRONG)
         } else {
             @Suppress("DEPRECATION")
             setUserAuthenticationValidityDurationSeconds(1)
-        }
+        }*/
     }
 
     /**
