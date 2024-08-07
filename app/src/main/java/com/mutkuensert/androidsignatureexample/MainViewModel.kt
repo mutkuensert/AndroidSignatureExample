@@ -67,8 +67,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val timestamp = formatter.format(LocalDateTime.now(ZoneId.of("Europe/Istanbul")))
 
+        val formattedTimestamp = "\"$timestamp\", timezone = \"Turkey\""
+
         _uiModel.update {
-            it.copy(timestamp = timestamp)
+            it.copy(timestamp = formattedTimestamp)
         }
     }
 
