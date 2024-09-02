@@ -49,6 +49,7 @@ class SignatureHelper(
 
     /**
      * See [Elliptic Curve Names](https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html#parameterspec-names)
+     * See why [P-384](https://github.com/OWASP/owasp-mastg/blob/master/Document/0x04g-Testing-Cryptography.md#identifying-insecure-andor-deprecated-cryptographic-algorithms)
      */
     object Curve {
         const val P_384 = "secp384r1"
