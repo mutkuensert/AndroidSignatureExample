@@ -15,6 +15,7 @@ import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
 import java.security.PublicKey
 import java.security.Signature
+import java.security.spec.ECGenParameterSpec
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.X509EncodedKeySpec
 
@@ -35,9 +36,24 @@ class SignatureHelper(
     val alias: String,
     val requireBiometricAuth: Boolean = false,
     val keyAlgorithm: String = KeyProperties.KEY_ALGORITHM_EC,
-    val signatureAlgorithm: String = "SHA256withECDSA",
+    val signatureAlgorithm: String = Algorithm.SHA384_WITH_ECDSA,
     val keyPairProvider: String = "AndroidKeyStore",
 ) {
+
+    /**
+     * See [Signature Algorithms](https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html#signature-algorithms)
+     */
+    object Algorithm {
+        const val SHA384_WITH_ECDSA = "SHA384withECDSA"
+    }
+
+    /**
+     * See [Elliptic Curve Names](https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html#parameterspec-names)
+     */
+    object Curve {
+        const val P_384 = "secp384r1"
+    }
+
     /**
      * Generates and returns key pair and if the pair is inside secure hardware or returns null and
      * removes the entry if the key pair isn't hardware backed or any error is occurred.
@@ -111,7 +127,9 @@ class SignatureHelper(
             spec.setBiometricAuthRequired()
         }
 
-        spec.setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+        spec.setAlgorithmParameterSpec(ECGenParameterSpec(Curve.P_384))
+
+        spec.setDigests(KeyProperties.DIGEST_SHA384)
         return spec.build()
     }
 
