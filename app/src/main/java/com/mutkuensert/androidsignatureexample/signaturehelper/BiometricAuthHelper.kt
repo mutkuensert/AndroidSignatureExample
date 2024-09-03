@@ -16,28 +16,33 @@ class BiometricAuthHelper {
 
     fun isStrongBiometricAuthAvailable(activity: Activity): Boolean {
         val biometricManager = BiometricManager.from(activity)
-        return when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
-            BiometricManager.BIOMETRIC_SUCCESS -> {
-                Log.d(Tag, "App can authenticate using biometrics.")
-                true
-            }
+        return try {
+            when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
+                BiometricManager.BIOMETRIC_SUCCESS -> {
+                    Log.d(Tag, "App can authenticate using biometrics.")
+                    true
+                }
 
-            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
-                Log.e(Tag, "No biometric features available on this device.")
-                false
-            }
+                BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
+                    Log.e(Tag, "No biometric features available on this device.")
+                    false
+                }
 
-            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
-                Log.e(Tag, "Biometric features are currently unavailable.")
-                false
-            }
+                BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
+                    Log.e(Tag, "Biometric features are currently unavailable.")
+                    false
+                }
 
-            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
-                Log.e(Tag, "Biometric features are not enrolled.")
-                false
-            }
+                BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
+                    Log.e(Tag, "Biometric features are not enrolled.")
+                    false
+                }
 
-            else -> false
+                else -> false
+            }
+        } catch (exception: Exception) {
+            Log.e(Tag, exception.stackTraceToString())
+            false
         }
     }
 

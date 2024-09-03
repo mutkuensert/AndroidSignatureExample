@@ -1,4 +1,4 @@
-package com.mutkuensert.androidsignatureexample.signaturehelper
+package com.mutkuensert.androidsignatureexample.signaturehelper.signature
 
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
@@ -6,17 +6,16 @@ import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
-import java.security.InvalidAlgorithmParameterException
+import com.mutkuensert.androidsignatureexample.signaturehelper.signature.algorithm.DsaAlgorithm
+import com.mutkuensert.androidsignatureexample.signaturehelper.signature.algorithm.DsaAlgorithms
+import com.mutkuensert.androidsignatureexample.signaturehelper.signature.algorithm.EcdsaAlgorithm
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.KeyStore
-import java.security.KeyStoreException
-import java.security.NoSuchAlgorithmException
 import java.security.PublicKey
 import java.security.Signature
 import java.security.spec.ECGenParameterSpec
-import java.security.spec.InvalidKeySpecException
 import java.security.spec.X509EncodedKeySpec
 
 private const val Tag = "SignatureHelper"
@@ -27,33 +26,16 @@ private const val Tag = "SignatureHelper"
  *
  * @param alias The alias of the key entry in the KeyStore.
  * @param requireBiometricAuth Indicates if strong biometric authentication is required for accessing the key.
- * @param keyAlgorithm The algorithm to be used for key generation. Default is EC (Elliptic Curve).
- * @param signatureAlgorithm The algorithm to be used for signing data. Default is "SHA256withECDSA".
+ * @param dsaAlgorithm The algorithm to be used for signing data. Default is [DsaAlgorithms.SHA384_WITH_ECDSA].
  * @param keyPairProvider The provider for the KeyStore. Default is "AndroidKeyStore".
  */
 @OptIn(ExperimentalStdlibApi::class)
 class SignatureHelper(
     val alias: String,
     val requireBiometricAuth: Boolean = false,
-    val keyAlgorithm: String = KeyProperties.KEY_ALGORITHM_EC,
-    val signatureAlgorithm: String = Algorithm.SHA384_WITH_ECDSA,
+    val dsaAlgorithm: DsaAlgorithm = DsaAlgorithms.SHA384_WITH_ECDSA,
     val keyPairProvider: String = "AndroidKeyStore",
 ) {
-
-    /**
-     * See [Signature Algorithms](https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html#signature-algorithms)
-     */
-    object Algorithm {
-        const val SHA384_WITH_ECDSA = "SHA384withECDSA"
-    }
-
-    /**
-     * See [Elliptic Curve Names](https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html#parameterspec-names)
-     * See why [P-384](https://github.com/OWASP/owasp-mastg/blob/master/Document/0x04g-Testing-Cryptography.md#identifying-insecure-andor-deprecated-cryptographic-algorithms)
-     */
-    object Curve {
-        const val P_384 = "secp384r1"
-    }
 
     /**
      * Generates and returns key pair and if the pair is inside secure hardware or returns null and
@@ -78,16 +60,13 @@ class SignatureHelper(
      * Generates a key pair.
      * @return Null if any error is occurred, otherwise the key pair.
      */
-    fun generateKeyPair(): KeyPair? {
+    private fun generateKeyPair(): KeyPair? {
         val kpg: KeyPairGenerator = try {
             KeyPairGenerator.getInstance(
-                keyAlgorithm,
+                dsaAlgorithm.keystoreKey,
                 keyPairProvider
             )
-        } catch (exception: NoSuchAlgorithmException) {
-            Log.e(Tag, exception.stackTraceToString())
-            return null
-        } catch (exception: NullPointerException) {
+        } catch (exception: Exception) {
             Log.e(Tag, exception.stackTraceToString())
             return null
         }
@@ -97,7 +76,7 @@ class SignatureHelper(
         val keyPair = try {
             kpg.initialize(parameterSpec)
             kpg.generateKeyPair()
-        } catch (exception: InvalidAlgorithmParameterException) {
+        } catch (exception: Exception) {
             Log.e(Tag, exception.stackTraceToString())
             return null
         }
@@ -128,7 +107,9 @@ class SignatureHelper(
             spec.setBiometricAuthRequired()
         }
 
-        spec.setAlgorithmParameterSpec(ECGenParameterSpec(Curve.P_384))
+        if (dsaAlgorithm is EcdsaAlgorithm) {
+            spec.setAlgorithmParameterSpec(ECGenParameterSpec(dsaAlgorithm.curve.name))
+        }
 
         spec.setDigests(KeyProperties.DIGEST_SHA384)
         return spec.build()
@@ -151,7 +132,7 @@ class SignatureHelper(
     fun exists(): Boolean? {
         return try {
             getKeyStore().containsAlias(alias)
-        } catch (exception: KeyStoreException) {
+        } catch (exception: Exception) {
             Log.e(Tag, "::${::exists.name}: " + exception.stackTraceToString())
             false
         }
@@ -165,7 +146,7 @@ class SignatureHelper(
             val keyStore = getKeyStore()
             keyStore.deleteEntry(alias)
             !keyStore.containsAlias(alias)
-        } catch (exception: KeyStoreException) {
+        } catch (exception: Exception) {
             Log.e(Tag, "::${::deleteKeyStoreEntry.name}: " + exception.stackTraceToString())
             false
         }
@@ -180,7 +161,7 @@ class SignatureHelper(
         val entry = getPrivateKeyEntry() ?: return null
 
         val signatureBytes: ByteArray = try {
-            Signature.getInstance(signatureAlgorithm).run {
+            Signature.getInstance(dsaAlgorithm.name).run {
                 initSign(entry.privateKey)
                 update(data.encodeToByteArray())
                 sign()
@@ -229,14 +210,14 @@ class SignatureHelper(
     }
 
     private fun isInsideSecureHardware(keyPair: KeyPair): Boolean? {
-        val factory = KeyFactory.getInstance(keyAlgorithm, keyPairProvider)
+        val factory = KeyFactory.getInstance(dsaAlgorithm.keystoreKey, keyPairProvider)
         val keyInfo: KeyInfo
         var isHardwareBacked: Boolean? = null
 
         try {
             keyInfo = factory.getKeySpec(keyPair.private, KeyInfo::class.java)
             isHardwareBacked = keyInfo.isHardwareBacked()
-        } catch (exception: InvalidKeySpecException) {
+        } catch (exception: Exception) {
             Log.e(Tag, exception.stackTraceToString())
         }
 
@@ -273,7 +254,7 @@ class SignatureHelper(
      * Verifies the given signature using the provided public key and data.
      */
     fun verifyData(publicKey: PublicKey, data: String, signature: String): Boolean {
-        val valid: Boolean = Signature.getInstance(signatureAlgorithm).run {
+        val valid: Boolean = Signature.getInstance(dsaAlgorithm.name).run {
             initVerify(publicKey)
             update(data.toByteArray())
             verify(Base64.decode(signature, Base64.DEFAULT))
@@ -289,17 +270,17 @@ class SignatureHelper(
     fun getPublicKeyFromString(publicKey: String): PublicKey? {
         val publicKeyBytes = try {
             Base64.decode(publicKey, Base64.NO_WRAP)
-        } catch (exception: IllegalArgumentException) {
+        } catch (exception: Exception) {
             Log.e(Tag, exception.stackTraceToString())
             return null
         }
 
         val keySpec = X509EncodedKeySpec(publicKeyBytes)
-        val keyFactory = KeyFactory.getInstance(keyAlgorithm)
+        val keyFactory = KeyFactory.getInstance(dsaAlgorithm.keystoreKey)
 
         return try {
             keyFactory.generatePublic(keySpec)
-        } catch (exception: InvalidKeySpecException) {
+        } catch (exception: Exception) {
             Log.e(Tag, exception.stackTraceToString())
             null
         }

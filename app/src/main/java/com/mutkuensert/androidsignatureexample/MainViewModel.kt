@@ -6,13 +6,13 @@ import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.AndroidViewModel
 import com.mutkuensert.androidsignatureexample.signaturehelper.BiometricSignatureHandler
-import com.mutkuensert.androidsignatureexample.signaturehelper.SignedData
+import com.mutkuensert.androidsignatureexample.signaturehelper.signature.SignedData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-private const val PrefsKeyPair = "keyPairPreferences"
-private const val KeyPublicKey = "publicKeyPrefsKey"
+private const val KeyPairPreferencesName = "keyPairPreferences"
+private const val PublicKeyPrefsKey = "publicKeyPrefsKey"
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiModel = MutableStateFlow(MainUiModel.initial())
@@ -22,11 +22,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val biometricSignatureHandler = BiometricSignatureHandler(alias)
 
     private val preferences =
-        application.applicationContext.getSharedPreferences(PrefsKeyPair, Context.MODE_PRIVATE)
+        application.applicationContext.getSharedPreferences(KeyPairPreferencesName, Context.MODE_PRIVATE)
 
     fun init() {
         _uiModel.update {
-            it.copy(alias = alias, publicKey = preferences.getString(KeyPublicKey, "")!!)
+            it.copy(alias = alias, publicKey = preferences.getString(PublicKeyPrefsKey, "")!!)
         }
     }
 
@@ -35,7 +35,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val publicKey = biometricSignatureHandler.getPublicKeyBase64Encoded(keyPair)
 
         preferences.edit {
-            putString(KeyPublicKey, publicKey)
+            putString(PublicKeyPrefsKey, publicKey)
         }
 
         _uiModel.update {
@@ -52,7 +52,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         if (isDeleted) {
             _uiModel.update {
-                preferences.edit { remove(KeyPublicKey) }
+                preferences.edit { remove(PublicKeyPrefsKey) }
                 MainUiModel.initial()
             }
         }

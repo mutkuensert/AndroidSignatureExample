@@ -1,6 +1,8 @@
 package com.mutkuensert.androidsignatureexample.signaturehelper
 
 import androidx.fragment.app.FragmentActivity
+import com.mutkuensert.androidsignatureexample.signaturehelper.signature.SignatureHelper
+import com.mutkuensert.androidsignatureexample.signaturehelper.signature.SignedData
 import java.security.KeyPair
 
 /**
