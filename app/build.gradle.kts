@@ -86,4 +86,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.biometric)
     implementation(libs.timber)
+    dokkaPlugin(libs.dokka.android.documentation.plugin)
 }
