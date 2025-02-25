@@ -5,10 +5,10 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.util.Base64
-import android.util.Log
 import com.mutkuensert.androidsignatureexample.signaturehelper.signature.algorithm.DsaAlgorithm
 import com.mutkuensert.androidsignatureexample.signaturehelper.signature.algorithm.DsaAlgorithms
 import com.mutkuensert.androidsignatureexample.signaturehelper.signature.algorithm.EcdsaAlgorithm
+import timber.log.Timber
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
@@ -17,8 +17,6 @@ import java.security.PublicKey
 import java.security.Signature
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.X509EncodedKeySpec
-
-private const val Tag = "SignatureHelper"
 
 /**
  * [SignatureHelper] provides utility methods to generate and manage key pairs in the Android KeyStore.
@@ -48,10 +46,7 @@ class SignatureHelper(
             keyPair
         } else {
             deleteKeyStoreEntry()
-            Log.w(
-                Tag,
-                "::${::generateHardwareBackedKeyPair.name}: Entry has been deleted because it's not hardware backed."
-            )
+            Timber.w("::${::generateHardwareBackedKeyPair.name}: Entry has been deleted because it's not hardware backed.")
             null
         }
     }
@@ -67,7 +62,7 @@ class SignatureHelper(
                 keyPairProvider
             )
         } catch (exception: Exception) {
-            Log.e(Tag, exception.stackTraceToString())
+            Timber.e(exception.stackTraceToString())
             return null
         }
 
@@ -77,13 +72,12 @@ class SignatureHelper(
             kpg.initialize(parameterSpec)
             kpg.generateKeyPair()
         } catch (exception: Exception) {
-            Log.e(Tag, exception.stackTraceToString())
+            Timber.e(exception.stackTraceToString())
             return null
         }
 
         val publicKeyBase64: String = Base64.encodeToString(keyPair.public.encoded, Base64.NO_WRAP)
-        Log.i(
-            Tag,
+        Timber.i(
             "::${::generateKeyPair.name}: " +
                     "Public Key (Base64): $publicKeyBase64" +
                     "\nPublic Key (Hex): ${keyPair.public.encoded.toHexString()}"
@@ -133,7 +127,7 @@ class SignatureHelper(
         return try {
             getKeyStore().containsAlias(alias)
         } catch (exception: Exception) {
-            Log.e(Tag, "::${::exists.name}: " + exception.stackTraceToString())
+            Timber.e("::${::exists.name}: " + exception.stackTraceToString())
             false
         }
     }
@@ -147,7 +141,7 @@ class SignatureHelper(
             keyStore.deleteEntry(alias)
             !keyStore.containsAlias(alias)
         } catch (exception: Exception) {
-            Log.e(Tag, "::${::deleteKeyStoreEntry.name}: " + exception.stackTraceToString())
+            Timber.e("::${::deleteKeyStoreEntry.name}: " + exception.stackTraceToString())
             false
         }
     }
@@ -167,14 +161,14 @@ class SignatureHelper(
                 sign()
             }
         } catch (exception: Exception) {
-            Log.e(Tag, exception.stackTraceToString())
+            Timber.e(exception.stackTraceToString())
             return null
         }
 
         val signature: String = Base64.encodeToString(signatureBytes, Base64.NO_WRAP)
 
-        Log.i(
-            Tag, "::${::signData.name}: " +
+        Timber.i(
+            "::${::signData.name}: " +
                     "Signature (Base64): $signature" +
                     "\nSignature (Hex): ${signatureBytes.toHexString()}"
         )
@@ -188,15 +182,12 @@ class SignatureHelper(
         val entry = try {
             ks.getEntry(alias, null)
         } catch (exception: Exception) {
-            Log.e(Tag, exception.stackTraceToString())
+            Timber.e(exception.stackTraceToString())
             null
         }
 
         if (entry !is KeyStore.PrivateKeyEntry) {
-            Log.w(
-                Tag,
-                "::${::getPrivateKeyEntry.name} Entry: $entry is not an instance of a PrivateKeyEntry"
-            )
+            Timber.w("::${::getPrivateKeyEntry.name} Entry: $entry is not an instance of a PrivateKeyEntry")
             return null
         }
 
@@ -218,7 +209,7 @@ class SignatureHelper(
             keyInfo = factory.getKeySpec(keyPair.private, KeyInfo::class.java)
             isHardwareBacked = keyInfo.isHardwareBacked()
         } catch (exception: Exception) {
-            Log.e(Tag, exception.stackTraceToString())
+            Timber.e(exception.stackTraceToString())
         }
 
         return isHardwareBacked
@@ -259,7 +250,7 @@ class SignatureHelper(
             update(data.toByteArray())
             verify(Base64.decode(signature, Base64.DEFAULT))
         }
-        Log.i(Tag, "Signature $signature is valid: $valid")
+        Timber.i("Signature $signature is valid: $valid")
 
         return valid
     }
@@ -271,7 +262,7 @@ class SignatureHelper(
         val publicKeyBytes = try {
             Base64.decode(publicKey, Base64.NO_WRAP)
         } catch (exception: Exception) {
-            Log.e(Tag, exception.stackTraceToString())
+            Timber.e(exception.stackTraceToString())
             return null
         }
 
@@ -281,7 +272,7 @@ class SignatureHelper(
         return try {
             keyFactory.generatePublic(keySpec)
         } catch (exception: Exception) {
-            Log.e(Tag, exception.stackTraceToString())
+            Timber.e(exception.stackTraceToString())
             null
         }
     }

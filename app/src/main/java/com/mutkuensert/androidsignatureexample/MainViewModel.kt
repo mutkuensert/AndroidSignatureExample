@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.AndroidViewModel
-import com.mutkuensert.androidsignatureexample.signaturehelper.BiometricSignatureHandler
+import com.mutkuensert.androidsignatureexample.signaturehelper.biometric.BiometricSignatureHandler
 import com.mutkuensert.androidsignatureexample.signaturehelper.signature.SignedData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

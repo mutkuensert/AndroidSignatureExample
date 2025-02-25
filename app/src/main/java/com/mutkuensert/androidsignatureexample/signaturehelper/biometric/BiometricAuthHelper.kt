@@ -1,15 +1,13 @@
-package com.mutkuensert.androidsignatureexample.signaturehelper
+package com.mutkuensert.androidsignatureexample.signaturehelper.biometric
 
 import android.app.Activity
-import android.util.Log
 import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-
-private const val Tag = "BiometricAuthHelper"
+import timber.log.Timber
 
 class BiometricAuthHelper {
     private lateinit var biometricPrompt: BiometricPrompt
@@ -19,29 +17,29 @@ class BiometricAuthHelper {
         return try {
             when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
                 BiometricManager.BIOMETRIC_SUCCESS -> {
-                    Log.d(Tag, "App can authenticate using biometrics.")
+                    Timber.d("App can authenticate using biometrics.")
                     true
                 }
 
                 BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
-                    Log.e(Tag, "No biometric features available on this device.")
+                    Timber.e("No biometric features available on this device.")
                     false
                 }
 
                 BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
-                    Log.e(Tag, "Biometric features are currently unavailable.")
+                    Timber.e("Biometric features are currently unavailable.")
                     false
                 }
 
                 BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
-                    Log.e(Tag, "Biometric features are not enrolled.")
+                    Timber.e("Biometric features are not enrolled.")
                     false
                 }
 
                 else -> false
             }
         } catch (exception: Exception) {
-            Log.e(Tag, exception.stackTraceToString())
+            Timber.e(exception.stackTraceToString())
             false
         }
     }

@@ -1,4 +1,4 @@
-package com.mutkuensert.androidsignatureexample.signaturehelper
+package com.mutkuensert.androidsignatureexample.signaturehelper.biometric
 
 import androidx.fragment.app.FragmentActivity
 import com.mutkuensert.androidsignatureexample.signaturehelper.signature.SignatureHelper
