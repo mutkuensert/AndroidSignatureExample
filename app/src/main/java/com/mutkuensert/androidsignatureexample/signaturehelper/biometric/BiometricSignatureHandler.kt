@@ -1,6 +1,7 @@
 package com.mutkuensert.androidsignatureexample.signaturehelper.biometric
 
 import androidx.fragment.app.FragmentActivity
+import com.mutkuensert.androidsignatureexample.BuildConfig
 import com.mutkuensert.androidsignatureexample.signaturehelper.signature.SignatureHelper
 import com.mutkuensert.androidsignatureexample.signaturehelper.signature.SignedData
 import java.security.KeyPair
@@ -28,7 +29,12 @@ class BiometricSignatureHandler(alias: String) {
             return null
         }
 
-        return signatureHelper.generateHardwareBackedKeyPair()
+        return if (BuildConfig.IS_EMULATOR) {
+            // Because emulators don't have Trusted Execution Environment
+            signatureHelper.generateKeyPair()
+        } else {
+            signatureHelper.generateHardwareBackedKeyPair()
+        }
     }
 
     fun deleteKeyPair(): Boolean {

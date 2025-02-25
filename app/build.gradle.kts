@@ -31,6 +31,21 @@ android {
             )
         }
     }
+
+    flavorDimensions.add("default")
+
+    productFlavors {
+        create("emulator") {
+            buildConfigField("Boolean", "IS_EMULATOR", "true")
+            applicationIdSuffix = ".emulator"
+        }
+
+        create("production") {
+            buildConfigField("Boolean", "IS_EMULATOR", "false")
+            applicationIdSuffix = ".prod"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -40,6 +55,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"

@@ -55,7 +55,7 @@ class SignatureHelper(
      * Generates a key pair.
      * @return Null if any error is occurred, otherwise the key pair.
      */
-    private fun generateKeyPair(): KeyPair? {
+    fun generateKeyPair(): KeyPair? {
         val kpg: KeyPairGenerator = try {
             KeyPairGenerator.getInstance(
                 dsaAlgorithm.keystoreKey,
