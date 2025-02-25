@@ -26,10 +26,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import com.mutkuensert.androidsignatureexample.ui.theme.AndroidKeyStoreExampleTheme
+import timber.log.Timber
 
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        runConfigurations()
         enableEdgeToEdge()
         val viewModel: MainViewModel by viewModels()
 
@@ -55,6 +57,12 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
+    }
+}
+
+private fun runConfigurations() {
+    if (BuildConfig.DEBUG) {
+        Timber.plant(Timber.DebugTree())
     }
 }
 
