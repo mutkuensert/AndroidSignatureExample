@@ -46,7 +46,7 @@ class SignatureHelper(
             keyPair
         } else {
             deleteKeyStoreEntry()
-            Timber.w("::${::generateHardwareBackedKeyPair.name}: Entry has been deleted because it's not hardware backed.")
+            Timber.w("Entry has been deleted because it's not hardware backed.")
             null
         }
     }
@@ -78,8 +78,7 @@ class SignatureHelper(
 
         val publicKeyBase64: String = Base64.encodeToString(keyPair.public.encoded, Base64.NO_WRAP)
         Timber.i(
-            "::${::generateKeyPair.name}: " +
-                    "Public Key (Base64): $publicKeyBase64" +
+            "Public Key (Base64): $publicKeyBase64" +
                     "\nPublic Key (Hex): ${keyPair.public.encoded.toHexString()}"
         )
 
@@ -127,7 +126,7 @@ class SignatureHelper(
         return try {
             getKeyStore().containsAlias(alias)
         } catch (exception: Exception) {
-            Timber.e("::${::exists.name}: " + exception.stackTraceToString())
+            Timber.e(exception.stackTraceToString())
             false
         }
     }
@@ -141,7 +140,7 @@ class SignatureHelper(
             keyStore.deleteEntry(alias)
             !keyStore.containsAlias(alias)
         } catch (exception: Exception) {
-            Timber.e("::${::deleteKeyStoreEntry.name}: " + exception.stackTraceToString())
+            Timber.e(exception.stackTraceToString())
             false
         }
     }
@@ -168,8 +167,7 @@ class SignatureHelper(
         val signature: String = Base64.encodeToString(signatureBytes, Base64.NO_WRAP)
 
         Timber.i(
-            "::${::signData.name}: " +
-                    "Signature (Base64): $signature" +
+            "Signature (Base64): $signature" +
                     "\nSignature (Hex): ${signatureBytes.toHexString()}"
         )
 
@@ -187,7 +185,7 @@ class SignatureHelper(
         }
 
         if (entry !is KeyStore.PrivateKeyEntry) {
-            Timber.w("::${::getPrivateKeyEntry.name} Entry: $entry is not an instance of a PrivateKeyEntry")
+            Timber.w("Entry {$entry} is not an instance of a PrivateKeyEntry")
             return null
         }
 
