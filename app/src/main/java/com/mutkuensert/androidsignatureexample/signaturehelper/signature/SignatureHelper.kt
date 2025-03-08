@@ -66,17 +66,26 @@ class SignatureHelper(
             return null
         }
 
-        val parameterSpec: KeyGenParameterSpec = getKeyGenParameterSpec()
-
-        val keyPair = try {
-            kpg.initialize(parameterSpec)
+        var keyPair = try {
+            kpg.initialize(getKeyGenParameterSpec(isStrongBoxEnabled = true))
             kpg.generateKeyPair()
         } catch (exception: Exception) {
             Timber.e(exception.stackTraceToString())
-            return null
+            null
         }
 
-        val publicKeyBase64: String = Base64.encodeToString(keyPair.public.encoded, Base64.NO_WRAP)
+        if (keyPair == null) {
+            keyPair = try {
+                kpg.initialize(getKeyGenParameterSpec(isStrongBoxEnabled = false))
+                kpg.generateKeyPair()
+            } catch (exception: Exception) {
+                Timber.e(exception.stackTraceToString())
+                return null
+            }
+        }
+
+        val publicKeyBase64: String =
+            Base64.encodeToString(keyPair!!.public.encoded, Base64.NO_WRAP)
         Timber.i(
             "Public Key (Base64): $publicKeyBase64" +
                     "\nPublic Key (Hex): ${keyPair.public.encoded.toHexString()}"
@@ -85,16 +94,15 @@ class SignatureHelper(
         return keyPair
     }
 
-    private fun getKeyGenParameterSpec(): KeyGenParameterSpec {
+    private fun getKeyGenParameterSpec(isStrongBoxEnabled: Boolean): KeyGenParameterSpec {
         val spec = KeyGenParameterSpec.Builder(
             alias,
             KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
         )
 
-        /* StrongBoxUnavailableException must be handled.
-        if (Build.VERSION.SDK_INT >= 28) {
+        if (Build.VERSION.SDK_INT >= 28 && isStrongBoxEnabled) {
             spec.setIsStrongBoxBacked(true)
-        }*/
+        }
 
         if (requireBiometricAuth) {
             spec.setBiometricAuthRequired()
