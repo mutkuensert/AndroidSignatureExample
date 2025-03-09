@@ -26,7 +26,7 @@ import java.security.spec.X509EncodedKeySpec
  * @param dsaAlgorithm The algorithm to be used for signing data. Default is [DsaAlgorithms.SHA384_WITH_ECDSA].
  */
 @OptIn(ExperimentalStdlibApi::class)
-abstract class KeyPairManager(
+open class KeyPairManager(
     val alias: String,
     val restrictToBiometricAuth: Boolean = false,
     val dsaAlgorithm: DsaAlgorithm = DsaAlgorithms.SHA384_WITH_ECDSA
