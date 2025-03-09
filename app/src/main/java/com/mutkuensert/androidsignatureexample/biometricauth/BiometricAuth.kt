@@ -1,4 +1,4 @@
-package com.mutkuensert.androidsignatureexample.signaturehelper.biometric
+package com.mutkuensert.androidsignatureexample.biometricauth
 
 import android.app.Activity
 import android.widget.Toast
@@ -9,10 +9,10 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import timber.log.Timber
 
-class BiometricAuthHelper {
+class BiometricAuth {
     private lateinit var biometricPrompt: BiometricPrompt
 
-    fun isStrongBiometricAuthAvailable(activity: Activity): Boolean {
+    fun isStrongBiometricEnrolled(activity: Activity): Boolean {
         val biometricManager = BiometricManager.from(activity)
         return try {
             when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {

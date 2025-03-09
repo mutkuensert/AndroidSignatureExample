@@ -104,7 +104,7 @@ private fun MainScreen(
 
         Text(text = "Public key", fontWeight = FontWeight.Bold)
 
-        SelectionContainer { Text(text = uiModel.publicKey) }
+        SelectionContainer { Text(text = uiModel.originalPublicKey) }
 
         Text(text = "Data", fontWeight = FontWeight.Bold)
 

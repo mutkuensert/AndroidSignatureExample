@@ -5,8 +5,9 @@ import android.content.Context
 import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.AndroidViewModel
-import com.mutkuensert.androidsignatureexample.signaturehelper.biometric.BiometricSignatureHandler
-import com.mutkuensert.androidsignatureexample.signaturehelper.signature.SignedData
+import com.mutkuensert.androidsignatureexample.signature.SignedData
+import com.mutkuensert.androidsignatureexample.signature.base64Encoded
+import com.mutkuensert.androidsignatureexample.signature.biometric.BiometricAuthRestrictedKeyPairManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -19,20 +20,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val uiModel = _uiModel.asStateFlow()
 
     private val alias = "alias"
-    private val biometricSignatureHandler = BiometricSignatureHandler(alias)
+    private val signatureManager = BiometricAuthRestrictedKeyPairManager(alias)
 
     private val preferences =
-        application.applicationContext.getSharedPreferences(KeyPairPreferencesName, Context.MODE_PRIVATE)
+        application.applicationContext.getSharedPreferences(
+            KeyPairPreferencesName,
+            Context.MODE_PRIVATE
+        )
 
     fun init() {
         _uiModel.update {
-            it.copy(alias = alias, publicKey = preferences.getString(PublicKeyPrefsKey, "")!!)
+            it.copy(
+                alias = alias,
+                originalPublicKey = preferences.getString(PublicKeyPrefsKey, "")!!
+            )
         }
     }
 
     fun createKeyPair(activity: FragmentActivity) {
-        val keyPair = biometricSignatureHandler.generateHardwareBackedKeyPair(activity) ?: return
-        val publicKey = biometricSignatureHandler.getPublicKeyBase64Encoded(keyPair)
+        val keyPair = signatureManager.generateHardwareBackedKeyPair(activity) ?: return
+        val publicKey = keyPair.public.base64Encoded
 
         preferences.edit {
             putString(PublicKeyPrefsKey, publicKey)
@@ -41,14 +48,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _uiModel.update {
             it.copy(
                 alias = alias,
-                publicKey = publicKey,
+                originalPublicKey = publicKey,
                 externalPublicKey = publicKey
             )
         }
     }
 
     fun deleteEntry() {
-        val isDeleted = biometricSignatureHandler.deleteKeyPair()
+        val isDeleted = signatureManager.deleteKeyStoreEntry()
 
         if (isDeleted) {
             _uiModel.update {
@@ -59,7 +66,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signData(activity: FragmentActivity) {
-        biometricSignatureHandler.authenticateAndSignData(
+        signatureManager.authenticateAndSignData(
             uiModel.value.data,
             activity,
             onAuthenticationSucceeded = { signedData: SignedData? ->
@@ -102,7 +109,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun verify() {
         _uiModel.update {
             it.copy(
-                isVerified = biometricSignatureHandler.verifyData(
+                isVerified = signatureManager.verifyData(
                     it.externalPublicKey,
                     it.dataToBeVerified,
                     it.signatureToBeVerified

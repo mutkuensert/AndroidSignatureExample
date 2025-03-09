@@ -1,13 +1,13 @@
-package com.mutkuensert.androidsignatureexample.signaturehelper.signature
+package com.mutkuensert.androidsignatureexample.signature
 
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.util.Base64
-import com.mutkuensert.androidsignatureexample.signaturehelper.signature.algorithm.DsaAlgorithm
-import com.mutkuensert.androidsignatureexample.signaturehelper.signature.algorithm.DsaAlgorithms
-import com.mutkuensert.androidsignatureexample.signaturehelper.signature.algorithm.EcdsaAlgorithm
+import com.mutkuensert.androidsignatureexample.signature.algorithm.DsaAlgorithm
+import com.mutkuensert.androidsignatureexample.signature.algorithm.DsaAlgorithms
+import com.mutkuensert.androidsignatureexample.signature.algorithm.EcdsaAlgorithm
 import timber.log.Timber
 import java.security.KeyFactory
 import java.security.KeyPair
@@ -19,25 +19,23 @@ import java.security.spec.ECGenParameterSpec
 import java.security.spec.X509EncodedKeySpec
 
 /**
- * [SignatureHelper] provides utility methods to generate and manage key pairs in the Android KeyStore.
- * This class supports generating hardware-backed key pairs, signing data, verifying signatures, and managing KeyStore entries.
+ * [KeyPairManager] provides methods for managing key pairs and signing processes using Android [KeyStore].
  *
- * @param alias The alias of the key entry in the KeyStore.
- * @param requireBiometricAuth Indicates if strong biometric authentication is required for accessing the key.
+ * @param alias The alias of [KeyStore.PrivateKeyEntry] in [KeyStore].
+ * @param restrictToBiometricAuth Restricts [KeyStore.PrivateKeyEntry] access to strong biometric authentication.
  * @param dsaAlgorithm The algorithm to be used for signing data. Default is [DsaAlgorithms.SHA384_WITH_ECDSA].
- * @param keyPairProvider The provider for the KeyStore. Default is "AndroidKeyStore".
  */
 @OptIn(ExperimentalStdlibApi::class)
-class SignatureHelper(
+abstract class KeyPairManager(
     val alias: String,
-    val requireBiometricAuth: Boolean = false,
-    val dsaAlgorithm: DsaAlgorithm = DsaAlgorithms.SHA384_WITH_ECDSA,
-    val keyPairProvider: String = "AndroidKeyStore",
+    val restrictToBiometricAuth: Boolean = false,
+    val dsaAlgorithm: DsaAlgorithm = DsaAlgorithms.SHA384_WITH_ECDSA
 ) {
+    private val keyPairProvider = "AndroidKeyStore"
 
     /**
-     * Generates and returns key pair and if the pair is inside secure hardware or returns null and
-     * removes the entry if the key pair isn't hardware backed or any error is occurred.
+     * Generates and returns key pair if private key entry is inside secure hardware otherwise
+     * removes the entry and returns null
      */
     fun generateHardwareBackedKeyPair(): KeyPair? {
         val keyPair = generateKeyPair() ?: return null
@@ -56,7 +54,7 @@ class SignatureHelper(
      * @return Null if any error is occurred, otherwise the key pair.
      */
     fun generateKeyPair(): KeyPair? {
-        val kpg: KeyPairGenerator = try {
+        val keyPairGenerator = try {
             KeyPairGenerator.getInstance(
                 dsaAlgorithm.keystoreKey,
                 keyPairProvider
@@ -66,32 +64,42 @@ class SignatureHelper(
             return null
         }
 
-        var keyPair = try {
-            kpg.initialize(getKeyGenParameterSpec(isStrongBoxEnabled = true))
-            kpg.generateKeyPair()
-        } catch (exception: Exception) {
-            Timber.e(exception.stackTraceToString())
-            null
-        }
+        var keyPair = generateKeyPairInStrongBox(keyPairGenerator)
 
         if (keyPair == null) {
-            keyPair = try {
-                kpg.initialize(getKeyGenParameterSpec(isStrongBoxEnabled = false))
-                kpg.generateKeyPair()
-            } catch (exception: Exception) {
-                Timber.e(exception.stackTraceToString())
-                return null
-            }
+            keyPair = generateKeyPair(keyPairGenerator) ?: return null
+        } else {
+            Timber.i("Private key is generated using StrongBox.")
         }
 
         val publicKeyBase64: String =
-            Base64.encodeToString(keyPair!!.public.encoded, Base64.NO_WRAP)
+            Base64.encodeToString(keyPair.public.encoded, Base64.NO_WRAP)
         Timber.i(
             "Public Key (Base64): $publicKeyBase64" +
                     "\nPublic Key (Hex): ${keyPair.public.encoded.toHexString()}"
         )
 
         return keyPair
+    }
+
+    private fun generateKeyPair(keyPairGenerator: KeyPairGenerator): KeyPair? {
+        return try {
+            keyPairGenerator.initialize(getKeyGenParameterSpec(isStrongBoxEnabled = false))
+            keyPairGenerator.generateKeyPair()
+        } catch (exception: Exception) {
+            Timber.e(exception.stackTraceToString())
+            null
+        }
+    }
+
+    private fun generateKeyPairInStrongBox(keyPairGenerator: KeyPairGenerator): KeyPair? {
+        return try {
+            keyPairGenerator.initialize(getKeyGenParameterSpec(isStrongBoxEnabled = true))
+            keyPairGenerator.generateKeyPair()
+        } catch (exception: Exception) {
+            Timber.e(exception.stackTraceToString())
+            null
+        }
     }
 
     private fun getKeyGenParameterSpec(isStrongBoxEnabled: Boolean): KeyGenParameterSpec {
@@ -104,7 +112,7 @@ class SignatureHelper(
             spec.setIsStrongBoxBacked(true)
         }
 
-        if (requireBiometricAuth) {
+        if (restrictToBiometricAuth) {
             spec.setBiometricAuthRequired()
         }
 
@@ -112,7 +120,7 @@ class SignatureHelper(
             spec.setAlgorithmParameterSpec(ECGenParameterSpec(dsaAlgorithm.curve.name))
         }
 
-        spec.setDigests(KeyProperties.DIGEST_SHA384)
+        spec.setDigests(dsaAlgorithm.digest)
         return spec.build()
     }
 
@@ -128,9 +136,9 @@ class SignatureHelper(
     }
 
     /**
-     *  Checks if a key entry with the specified alias exists in the KeyStore.
+     *  Checks if [alias] exists in [KeyStore].
      */
-    fun exists(): Boolean? {
+    fun exists(): Boolean {
         return try {
             getKeyStore().containsAlias(alias)
         } catch (exception: Exception) {
@@ -140,7 +148,7 @@ class SignatureHelper(
     }
 
     /**
-     * Deletes the key entry with the specified alias from the KeyStore.
+     * Deletes [alias] from [KeyStore].
      */
     fun deleteKeyStoreEntry(): Boolean {
         return try {
@@ -154,9 +162,8 @@ class SignatureHelper(
     }
 
     /**
-     * Signs the given data using the private key associated with the specified alias, returns null
-     * if an error occurs.
-     * If biometric authentication is required, it must be performed before signing the data.
+     * Signs [data] using private key, returns null if any error occurs.
+     * If biometric authentication is required, it must be performed before signing [data].
      */
     fun signData(data: String): SignedData? {
         val entry = getPrivateKeyEntry() ?: return null
@@ -183,10 +190,10 @@ class SignatureHelper(
     }
 
     private fun getPrivateKeyEntry(): KeyStore.PrivateKeyEntry? {
-        val ks = getKeyStore()
+        val keyStore = getKeyStore()
 
         val entry = try {
-            ks.getEntry(alias, null)
+            keyStore.getEntry(alias, null)
         } catch (exception: Exception) {
             Timber.e(exception.stackTraceToString())
             null
@@ -232,25 +239,18 @@ class SignatureHelper(
     }
 
     /**
-     * Encodes the public key of the given key pair to a Base64 string.
-     */
-    fun getPublicKeyBase64Encoded(keyPair: KeyPair): String {
-        return Base64.encodeToString(keyPair.public.encoded, Base64.NO_WRAP)
-    }
-
-    /**
-     * Verifies the given signature using the provided public key and data.
+     * Verifies [signature] using base64 encoded [publicKey] and [data].
      */
     fun verifyData(publicKey: String, data: String, signature: String): Boolean {
-        val pubKey: PublicKey = getPublicKeyFromString(publicKey) ?: return false
+        val pubKey: PublicKey = generatePublicKey(publicKey) ?: return false
         val valid: Boolean = verifyData(pubKey, data, signature)
         return valid
     }
 
     /**
-     * Verifies the given signature using the provided public key and data.
+     * Verifies [signature] using [publicKey] and [data].
      */
-    fun verifyData(publicKey: PublicKey, data: String, signature: String): Boolean {
+    private fun verifyData(publicKey: PublicKey, data: String, signature: String): Boolean {
         val valid: Boolean = Signature.getInstance(dsaAlgorithm.name).run {
             initVerify(publicKey)
             update(data.toByteArray())
@@ -262,9 +262,9 @@ class SignatureHelper(
     }
 
     /**
-     * Converts a Base64 encoded public key string to a PublicKey object.
+     * Generates [PublicKey] using Base64 encoded [publicKey].
      */
-    fun getPublicKeyFromString(publicKey: String): PublicKey? {
+    private fun generatePublicKey(publicKey: String): PublicKey? {
         val publicKeyBytes = try {
             Base64.decode(publicKey, Base64.NO_WRAP)
         } catch (exception: Exception) {
