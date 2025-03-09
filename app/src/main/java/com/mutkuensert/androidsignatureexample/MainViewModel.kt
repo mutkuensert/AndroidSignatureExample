@@ -20,7 +20,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val uiModel = _uiModel.asStateFlow()
 
     private val alias = "alias"
-    private val signatureManager = BiometricAuthRestrictedKeyPairManager(alias)
+    private val keyPairManager = BiometricAuthRestrictedKeyPairManager(alias)
 
     private val preferences =
         application.applicationContext.getSharedPreferences(
@@ -38,7 +38,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun createKeyPair(activity: FragmentActivity) {
-        val keyPair = signatureManager.generateHardwareBackedKeyPair(activity) ?: return
+        val keyPair = keyPairManager.generateHardwareBackedKeyPair(activity) ?: return
         val publicKey = keyPair.public.base64Encoded
 
         preferences.edit {
@@ -55,7 +55,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun deleteEntry() {
-        val isDeleted = signatureManager.deleteKeyStoreEntry()
+        val isDeleted = keyPairManager.deleteKeyStoreEntry()
 
         if (isDeleted) {
             _uiModel.update {
@@ -66,7 +66,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signData(activity: FragmentActivity) {
-        signatureManager.authenticateAndSignData(
+        keyPairManager.authenticateAndSignData(
             uiModel.value.data,
             activity,
             onAuthenticationSucceeded = { signedData: SignedData? ->
@@ -109,7 +109,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun verify() {
         _uiModel.update {
             it.copy(
-                isVerified = signatureManager.verifyData(
+                isVerified = keyPairManager.verifyData(
                     it.externalPublicKey,
                     it.dataToBeVerified,
                     it.signatureToBeVerified
