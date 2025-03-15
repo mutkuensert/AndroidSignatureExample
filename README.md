@@ -12,7 +12,7 @@ AndroidSignatureExample is a demonstration project that shows how to implement s
 - **Biometric Authentication:** Restrict access to private keys with strong biometric authentication
 - **ECDSA Digital Signatures:** Implement industry-standard signature algorithms (SHA384/SHA256 with ECDSA)
 - **Signature Verification:** Verify signatures using stored or externally provided public keys
-- **StrongBox Support:** Optional secure hardware integration where available
+- **StrongBox Support:** Optional secure hardware integration where available (StrongBox doesn't support 384 bit key size)
 - **Emulator Compatibility:** Graceful handling of hardware security features in emulator environments
 
 ## Technical Details
